@@ -1438,8 +1438,23 @@ function renderGraficaOptimizacion(grafId, datos) {
         legend: { orientation: "h", y: -0.2, x: 0.5, xanchor: "center", bgcolor: "rgba(255,255,255,0.9)", bordercolor: "#ddd", borderwidth: 1 }
     };
 
+    // En celular: márgenes más chicos para que la gráfica quepa
+    if (window.innerWidth < 576) {
+        layout.margin = { l: 45, r: 45, t: 50, b: 60 };
+        layout.legend.y = -0.35;
+    }
     Plotly.newPlot(grafId, traces, layout, { responsive: true, displaylogo: false });
 }
+
+// Las gráficas que se dibujan en una pestaña oculta toman un ancho por
+// defecto (700px); al mostrarse la pestaña se ajustan al ancho real.
+document.addEventListener("click", () => {
+    setTimeout(() => {
+        document.querySelectorAll(".js-plotly-plot").forEach((g) => {
+            if (g.offsetParent !== null) Plotly.Plots.resize(g);
+        });
+    }, 60);
+});
 
 // ---------------------------------------------------------------------------
 // Utilidades de formato y color
