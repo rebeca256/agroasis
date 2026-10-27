@@ -41,6 +41,7 @@ agroasis/
 └── presentacion/   Presentación del proyecto (HTML)
 ```
 
+- 🎤 [Presentación en línea](https://rebeca256.github.io/agroasis/presentacion/)
 - 📄 [Documento del proyecto (PDF)](documento/Prototipico_Agroasis.pdf)
 - 📘 [Detalle técnico de la app](app/LEEME.md)
 
