@@ -23,6 +23,12 @@ Muchos agricultores en México fertilizan "a ojo": aplican de más (gastan diner
 
 Si el agricultor no tiene análisis de laboratorio, el **modo manual** estima las propiedades del suelo a partir de lo que ha sembrado antes y del tipo de suelo.
 
+## 🌱 Pruébala en línea
+
+**👉 https://rebeca256.github.io/agroasis/web/**
+
+Funciona desde cualquier celular o computadora, sin instalar nada. Todo el análisis (incluido el modelo de Machine Learning) corre **dentro del navegador**: no hay servidor, los datos del agricultor no salen de su dispositivo y, una vez cargada la página, sigue funcionando aunque se caiga el internet.
+
 ## La ciencia de datos detrás
 
 | Disciplina | Qué hace en Agroasis | Archivo |
@@ -36,16 +42,19 @@ Si el agricultor no tiene análisis de laboratorio, el **modo manual** estima la
 
 ```
 agroasis/
-├── app/            Aplicación web (Python + Flask)
+├── app/            Aplicación original (Python + Flask): modelo, lógica y plantillas
+├── web/            Versión que corre en el navegador (generada desde app/)
+├── pruebas/        Pruebas de paridad: Flask vs. versión del navegador
 ├── documento/      Documento del proyecto (LaTeX + PDF)
 └── presentacion/   Presentación del proyecto (HTML)
 ```
 
+- 🌱 [App en línea](https://rebeca256.github.io/agroasis/web/)
 - 🎤 [Presentación en línea](https://rebeca256.github.io/agroasis/presentacion/)
 - 📄 [Documento del proyecto (PDF)](documento/Prototipico_Agroasis.pdf)
 - 📘 [Detalle técnico de la app](app/LEEME.md)
 
-## Cómo ejecutar la app
+## Cómo ejecutar la app con Python (Flask)
 
 Requisitos: **Python 3.13** y **git**.
 
@@ -77,9 +86,39 @@ Parcela_A_M1,6.5,2.5,45,15,120,1500,250,25,12,1.5,8,0.8,0.5,0.8,franco,750,22,15
 
 Las muestras se agrupan por parcela según el nombre (`Parcela_A_M1`, `Parcela_A_M2` → `Parcela_A`). Las columnas que falten se rellenan con valores de referencia.
 
+## Versión en el navegador (`web/`)
+
+La carpeta `web/` es la misma aplicación, convertida para correr sin servidor y publicarse en GitHub Pages:
+
+- **Modelo:** los 200 árboles del Random Forest, el `StandardScaler` y el `LabelEncoder` se exportan a JSON (`web/static/data/modelo.json`, ~0.5 MB).
+- **Lógica:** `web/static/js/agroasis-engine.js` es una traducción a JavaScript de `app.py`, `models/` y `utils/`. Intercepta las llamadas `fetch("/api/...")` de las páginas y responde lo mismo que respondería Flask, así que las plantillas HTML no cambian.
+- **Páginas:** se generan renderizando las plantillas de Flask a HTML estático.
+
+**Si cambian el modelo, los CSV o las plantillas**, regeneren `web/`:
+
+```bash
+cd app
+venv\Scripts\activate
+python build_web.py
+```
+
+Si cambian la lógica de Python (`app.py`, `models/`, `utils/`), hay que hacer el mismo cambio en `agroasis-engine.js`.
+
+### Pruebas de paridad
+
+Verifican que la versión del navegador da **exactamente** las mismas respuestas que Flask, con más de 1,000 peticiones (CSV reales y con ruido, varias parcelas, archivos con errores, modo manual y optimización):
+
+```bash
+app\venv\Scripts\python pruebas\generar_casos.py   # respuestas de Flask
+node pruebas\comparar.js                            # las compara con el motor JS
+```
+
+> Cuando dos cultivos tienen **exactamente** la misma probabilidad, NumPy los ordena de forma arbitraria (depende del procesador), así que Flask mismo puede dar un orden distinto en otra computadora. La prueba no cuenta esos empates como diferencia.
+
 ## Tecnologías
 
 **Backend:** Python, Flask, pandas, NumPy, scikit-learn
+**Versión en el navegador:** JavaScript (motor propio), GitHub Pages
 **Frontend:** HTML, CSS, JavaScript, Bootstrap 5, Plotly.js
 **Documento:** LaTeX
 

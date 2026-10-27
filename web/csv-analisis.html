@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis CSV — Agroasis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="static/css/style.css">
+    
+    <script src="static/js/agroasis-engine.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <img src="static/img/agroasis_letras.png" alt="Agroasis" style="height: 50px; object-fit: contain;">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house-fill me-1"></i>Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link fw-semibold" href="csv-analisis.html" style="color:#7fffb9;"><i class="bi bi-file-earmark-bar-graph-fill me-1"></i>Análisis CSV</a></li>
+                    <li class="nav-item"><a class="nav-link" href="manual.html"><i class="bi bi-chat-dots-fill me-1"></i>Modo Manual</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid py-4">
+        
+            
+        
+
+        
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<style>
+/* -----------------------------------------------------------------------
+   Estilos del modulo Analisis CSV
+   Paleta: cards con cabeceras de color como en la captura de referencia
+   ----------------------------------------------------------------------- */
+body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+
+
+/* --- Zona de upload --- */
+.upload-zone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    background: #fff;
+    transition: border-color 0.25s, background 0.25s;
+    cursor: pointer;
+    position: relative;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+.upload-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2;
+}
+.upload-icon {
+    font-size: 2.8rem;
+    color: #3b82f6;
+    margin-bottom: 0.75rem;
+    display: block;
+    animation: floatIcon 3s ease-in-out infinite;
+}
+@keyframes floatIcon {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-7px); }
+}
+
+/* --- Boton analizar --- */
+.btn-run {
+    background: linear-gradient(135deg, #16a34a, #0ea5e9);
+    border: none;
+    border-radius: 50px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    color: #fff;
+    transition: all 0.25s;
+    box-shadow: 0 4px 16px rgba(22,163,74,0.3);
+}
+.btn-run:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(22,163,74,0.45); color:#fff; }
+.btn-run:disabled { opacity: 0.5; transform: none; }
+
+/* --- Tarjetas de resultado (cabeceras de color como en el mockup) --- */
+.res-card { border-radius: 12px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08); margin-bottom: 1.25rem; background: #fff; }
+.res-card .card-head {
+    padding: 0.85rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.res-card .card-body-inner { padding: 1.25rem; }
+
+/* Cabecera verde — Analisis de Suelo */
+.head-green  { background: #16a34a; color: #fff; }
+/* Cabecera amarilla — Analisis Vectorial */
+.head-yellow { background: #ca8a04; color: #fff; }
+/* Cabecera azul — Fertilizantes */
+.head-blue   { background: #2563eb; color: #fff; }
+/* Cabecera teal — Optimizacion */
+.head-teal   { background: #0891b2; color: #fff; }
+/* Cabecera info (suelo equilibrado) */
+.head-info   { background: #0ea5e9; color: #fff; }
+
+/* --- Badge de salud --- */
+.health-badge {
+    display: inline-block;
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- Tabla de cultivos top --- */
+.top-crop-list { list-style: none; padding: 0; margin: 0; }
+.top-crop-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.22rem 0;
+    font-size: 0.87rem;
+}
+.top-crop-list li::before {
+    content: '';
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #16a34a;
+    flex-shrink: 0;
+}
+
+/* --- Tabla vectorial 3 columnas --- */
+.vec-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.vec-table th { padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.78rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+.vec-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
+.vec-table tr:last-child td { border-bottom: none; }
+.vec-demanda td { background: #eff6ff; font-weight: 600; color: #1e40af; }
+.vec-suelo td   { background: #f0fdf4; color: #166534; }
+.vec-deficit td { background: #fef2f2; font-weight: 600; color: #991b1b; }
+.vec-exceso td  { background: #fff7ed; font-weight: 600; color: #9a3412; }
+
+/* Tabla de 5 parametros (estado nutricional) */
+.state-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 1rem; }
+.state-table th { padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.75rem; color: #6b7280; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+.state-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
+.state-table tr:last-child td { border-bottom: none; }
+
+/* Badges de estado nutricional */
+.st-optimo        { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; border-radius: 20px; padding: 0.2rem 0.65rem; font-size: 0.75rem; font-weight: 600; white-space:nowrap; }
+.st-deficit       { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; border-radius: 20px; padding: 0.2rem 0.65rem; font-size: 0.75rem; font-weight: 600; white-space:nowrap; }
+.st-exceso        { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; border-radius: 20px; padding: 0.2rem 0.65rem; font-size: 0.75rem; font-weight: 600; white-space:nowrap; }
+.st-exceso-toxico { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; border-radius: 20px; padding: 0.2rem 0.65rem; font-size: 0.75rem; font-weight: 600; white-space:nowrap; animation: pulseSt 1.4s ease infinite; }
+.st-critico       { background: #fca5a5; color: #7f1d1d; border: 1px solid #f87171; border-radius: 20px; padding: 0.2rem 0.65rem; font-size: 0.75rem; font-weight: 600; white-space:nowrap; animation: pulseSt 1.4s ease infinite; }
+@keyframes pulseSt {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50%      { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+}
+
+/* --- Tarjeta de fertilizante --- */
+.fert-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.fert-row:last-child { border-bottom: none; }
+.fert-nut-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.fert-dosis { font-size: 1rem; font-weight: 700; color: #16a34a; }
+.fert-costales { font-size: 0.8rem; color: #64748b; margin-top: 0.15rem; }
+
+/* -----------------------------------------------------------------------
+   Matriz de parcelas (multiparcela) — grid CSS, sin imagenes
+   ----------------------------------------------------------------------- */
+.parcel-matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin: 1rem 0;
+}
+.parcel-tile {
+    border-radius: 10px;
+    padding: 1rem 0.75rem;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    border: 3px solid transparent;
+}
+.parcel-tile:hover {
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+    z-index: 5;
+}
+.parcel-tile.active { border-color: #fff; box-shadow: 0 0 0 3px rgba(0,0,0,0.35); }
+.parcel-tile .tile-id   { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.85); text-transform: uppercase; }
+.parcel-tile .tile-score { font-size: 1.6rem; font-weight: 800; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.3); line-height: 1.1; }
+.parcel-tile .tile-label { font-size: 0.65rem; color: rgba(255,255,255,0.75); margin-top: 0.2rem; text-transform: capitalize; }
+.parcel-tile .tile-muestras { font-size: 0.62rem; color: rgba(255,255,255,0.6); margin-top: 0.1rem; }
+
+/* Tooltip */
+.parcel-tile::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #f8fafc; font-size: 0.73rem; padding: 0.35rem 0.7rem;
+    border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: opacity 0.18s; z-index: 20; border: 1px solid rgba(255,255,255,0.1);
+}
+.parcel-tile:hover::after { opacity: 1; }
+
+/* Leyenda de la matriz */
+.matrix-legend { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+.legend-dot { width: 13px; height: 13px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+.legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
+
+/* --- Estadisticas resumen multi-parcela --- */
+.stat-mini { text-align: center; padding: 0.8rem 1rem; background: #fff; border-radius: 10px; box-shadow: 0 1px 8px rgba(0,0,0,0.07); }
+.stat-mini .val { font-size: 1.6rem; font-weight: 800; }
+.stat-mini .lbl { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* --- Barra de progreso --- */
+.prog-bar-track { height: 5px; background: #e2e8f0; border-radius: 50px; overflow: hidden; margin: 1rem 0; }
+.prog-bar-fill {
+    height: 100%; background: linear-gradient(90deg, #16a34a, #0ea5e9, #16a34a);
+    background-size: 200% 100%; border-radius: 50px; width: 0%;
+    transition: width 0.35s; animation: shimmer 1.5s linear infinite;
+}
+@keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+
+/* --- Animacion de entrada --- */
+.fade-in { animation: fadeIn 0.4s ease both; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
+
+/* --- Separador parcela detalle --- */
+.parcel-detail-header {
+    background: #1e293b;
+    color: #fff;
+    border-radius: 10px;
+    padding: 0.85rem 1.2rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+</style>
+
+
+<div class="container-fluid px-4 pt-3">
+<div class="row g-3">
+
+    <!-- Panel de carga -->
+    <div class="col-lg-5" id="uploadPanel">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-cloud-arrow-up-fill text-primary"></i> Cargar archivo CSV
+                </h6>
+                <p class="text-muted small mb-3">
+                    El sistema detecta si hay 1 parcela o varias agrupadas por
+                    <code>id_parcela</code> / <code>parcela</code>.
+                    Las columnas faltantes se rellenan con valores de referencia.
+                </p>
+
+                <div class="upload-zone" id="dropZone">
+                    <i class="bi bi-file-earmark-spreadsheet upload-icon"></i>
+                    <input type="file" id="inputCSV" accept=".csv">
+                    <p class="fw-semibold mb-1" id="dropLabel">Arrastra tu CSV aquí o haz clic para seleccionar</p>
+                    <small class="text-muted">Solo archivos .csv con encabezados</small>
+                </div>
+
+                <div class="d-flex gap-2 align-items-center mt-3">
+                    <button class="btn-run btn" id="btnRun" disabled>
+                        <i class="bi bi-cpu-fill me-1"></i> Analizar Parcelas
+                    </button>
+                    <button class="btn btn-outline-secondary" id="btnDemo">
+                        <i class="bi bi-file-earmark-text me-1"></i> CSV de ejemplo
+                    </button>
+                    <small class="text-muted" id="lblArchivo"></small>
+                </div>
+
+                <!-- Barra de progreso -->
+                <div id="progContainer" style="display:none;">
+                    <div class="d-flex justify-content-between mt-2 mb-1">
+                        <small class="text-muted" id="progLabel">Procesando...</small>
+                        <small class="text-muted" id="progPct">0%</small>
+                    </div>
+                    <div class="prog-bar-track">
+                        <div class="prog-bar-fill" id="progFill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guia de columnas -->
+        <div class="card shadow-sm mt-3">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle text-info"></i> Columnas reconocidas
+                </h6>
+                <p class="text-muted small mb-1"><strong>Agrupación (opcional):</strong> <code>id_parcela</code>, <code>parcela</code></p>
+                <p class="text-muted small mb-1"><strong>Suelo:</strong> <code>ph, mo_pct, N_mgkg, P_mgkg, K_mgkg,<br>Ca_mgkg, Mg_mgkg, S_mgkg, Fe_mgkg,<br>Zn_mgkg, Mn_mgkg, Cu_mgkg, B_mgkg,<br>ce_ds_m, textura_suelo, precipitacion_mm,<br>temp_media_c, altitud_msnm</code></p>
+                <div class="p-2 rounded mt-2" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+                    <small class="text-success">
+                        <i class="bi bi-check-circle-fill me-1"></i>
+                        Textura acepta: <em>Franco Arcilloso</em>, <em>ARENOSO</em>, <em>franco_arcilloso</em>, etc.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de resultados -->
+    <div class="col-lg-7" id="rightPanel">
+        <div class="d-flex justify-content-end mb-3" id="btnNuevoContainer" style="display:none !important;">
+            <button class="btn btn-outline-primary shadow-sm" onclick="location.reload()" style="border-radius:20px;">
+                <i class="bi bi-arrow-clockwise"></i> Analizar otro archivo
+            </button>
+        </div>
+        <div id="resultContainer" style="display:none;"></div>
+        <div id="detalleContainer" style="display:none;"></div>
+    </div>
+</div>
+</div>
+
+<script>
+/* =======================================================================
+   Modulo Analisis CSV — pipeline unificado
+   ======================================================================= */
+
+// ---------------------------------------------------------------------------
+// Colores canonicos de estado de salud del suelo
+// ---------------------------------------------------------------------------
+const ESTADO_COLOR = {
+    excelente: "#16a34a", bueno: "#4ade80",
+    aceptable: "#f59e0b", pobre: "#ef4444", muy_pobre: "#b91c1c", error: "#6b7280"
+};
+
+// Clases CSS de badge de estado nutricional (mapeadas desde el backend)
+const ESTADO_CSS = {
+    "Optimo":        "st-optimo",
+    "Óptimo":        "st-optimo",
+    "Deficit":       "st-deficit",
+    "Déficit":       "st-deficit",
+    "Exceso":        "st-exceso",
+    "Exceso Toxico": "st-exceso-toxico",
+    "Exceso Tóxico": "st-exceso-toxico",
+    "Critico":       "st-critico",
+    "Crítico":       "st-critico",
+};
+
+// Color del badge de nutriente objetivo en los fertilizantes
+const NUT_COLOR = { n: "#1d4ed8", p: "#d97706", k: "#7c3aed" };
+
+// ---------------------------------------------------------------------------
+// Estado global del modulo
+// ---------------------------------------------------------------------------
+let archivoActual   = null;
+let resultadosGlobal = [];   // Array de resultados de parcelas (modo multiple)
+
+// ---------------------------------------------------------------------------
+// Interaccion con el formulario de carga
+// ---------------------------------------------------------------------------
+const dropZone   = document.getElementById("dropZone");
+const inputCSV   = document.getElementById("inputCSV");
+const btnRun     = document.getElementById("btnRun");
+const dropLabel  = document.getElementById("dropLabel");
+const lblArchivo = document.getElementById("lblArchivo");
+
+dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+dropZone.addEventListener("drop", e => {
+    e.preventDefault(); dropZone.classList.remove("drag-over");
+    const f = e.dataTransfer.files[0];
+    if (f) asignarArchivo(f);
+});
+inputCSV.addEventListener("change", () => { if (inputCSV.files[0]) asignarArchivo(inputCSV.files[0]); });
+
+function asignarArchivo(file) {
+    if (!file.name.endsWith(".csv")) { mostrarError("Solo se aceptan archivos .csv."); return; }
+    archivoActual = file;
+    dropLabel.textContent = file.name;
+    lblArchivo.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+    btnRun.disabled = false;
+    document.getElementById("resultContainer").style.display = "none";
+    document.getElementById("detalleContainer").style.display = "none";
+}
+
+btnRun.addEventListener("click", async () => {
+    if (!archivoActual) return;
+    setProgreso(true, "Enviando archivo...", 25);
+
+    const fd = new FormData();
+    fd.append("archivo", archivoActual);
+
+    try {
+        setProgreso(true, "Ejecutando analisis 5D...", 60);
+        const res  = await fetch("/api/csv/analizar", { method: "POST", body: fd });
+        const data = await res.json();
+        setProgreso(true, "Construyendo resultados...", 90);
+        setProgreso(false);
+
+        if (!data.exito) { mostrarError(data.error || "Error desconocido."); return; }
+
+        if (data.modo === "unico") {
+            renderUnico(data);
+        } else {
+            renderMultiple(data);
+        }
+    } catch (err) {
+        setProgreso(false);
+        mostrarError("Error de conexion: " + err.message);
+    }
+});
+
+const btnDemo = document.getElementById("btnDemo");
+btnDemo.addEventListener("click", async () => {
+    setProgreso(true, "Cargando archivo de prueba...", 25);
+    try {
+        setProgreso(true, "Ejecutando analisis 5D...", 60);
+        const res  = await fetch("/api/csv/demo", { method: "POST" });
+        const data = await res.json();
+        setProgreso(true, "Construyendo resultados...", 90);
+        setProgreso(false);
+
+        if (!data.exito) { mostrarError(data.error || "Error desconocido."); return; }
+
+        if (data.modo === "unico") {
+            renderUnico(data);
+        } else {
+            renderMultiple(data);
+        }
+    } catch (err) {
+        setProgreso(false);
+        mostrarError("Error de conexion: " + err.message);
+    }
+});
+
+// ---------------------------------------------------------------------------
+// Control de progreso
+// ---------------------------------------------------------------------------
+function setProgreso(visible, label = "", pct = 0) {
+    document.getElementById("progContainer").style.display = visible ? "block" : "none";
+    document.getElementById("progLabel").textContent = label;
+    document.getElementById("progPct").textContent   = pct + "%";
+    document.getElementById("progFill").style.width  = pct + "%";
+    btnRun.disabled = visible;
+}
+
+function mostrarError(msg) {
+    const rc = document.getElementById("resultContainer");
+    rc.innerHTML = `<div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-x-circle-fill"></i><span>${msg}</span></div>`;
+    rc.style.display = "block";
+}
+
+// ---------------------------------------------------------------------------
+// MODO UNICO: una sola parcela
+// ---------------------------------------------------------------------------
+function renderUnico(data) {
+    document.getElementById("uploadPanel").style.display = "none";
+    document.getElementById("rightPanel").classList.replace("col-lg-7", "col-lg-12");
+    document.getElementById("btnNuevoContainer").style.setProperty("display", "flex", "important");
+
+    const rc = document.getElementById("resultContainer");
+    const r  = data.resultado;
+    // grafId fijo para modo unico — independiente del nombre de parcela
+    const grafId = "graficaUnico";
+    rc.innerHTML = buildAlertaColumnas(data.columnas_usadas_por_defecto) + buildResultadoParcela(r, grafId);
+    rc.style.display = "block";
+    rc.scrollIntoView({ behavior: "smooth" });
+
+    // Cargar grafica de optimizacion asincronamente (el div ya existe en el DOM)
+    const cultivo = (r.analisis_suelo?.cultivos_compatibles || [{}])[0]?.cultivo || "maiz";
+    cargarGraficaEnDiv(grafId, cultivo, r.datos_entrada || {}, r.plan_fertilizacion);
+}
+
+// ---------------------------------------------------------------------------
+// MODO MULTIPLE: N parcelas
+// ---------------------------------------------------------------------------
+function renderMultiple(data) {
+    document.getElementById("uploadPanel").style.display = "none";
+    document.getElementById("rightPanel").classList.replace("col-lg-7", "col-lg-12");
+    document.getElementById("btnNuevoContainer").style.setProperty("display", "flex", "important");
+
+    resultadosGlobal = data.resultados;
+    const rc = document.getElementById("resultContainer");
+    const dc = document.getElementById("detalleContainer");
+
+    // Estadisticas de resumen
+    const estados = data.resultados.map(r => r.estado_suelo || "pobre");
+    const buenos   = estados.filter(e => ["excelente","bueno"].includes(e)).length;
+    const atencion = estados.filter(e => ["pobre","muy_pobre"].includes(e)).length;
+    const acept    = estados.filter(e => e === "aceptable").length;
+
+    let html = buildAlertaColumnas(data.columnas_usadas_por_defecto);
+
+    // Estadisticas rapidas
+    html += `<div class="row g-2 mb-3 fade-in">
+        <div class="col-4"><div class="stat-mini">
+            <div class="val" style="color:#16a34a;">${data.total_parcelas}</div>
+            <div class="lbl">Parcelas</div>
+        </div></div>
+        <div class="col-4"><div class="stat-mini">
+            <div class="val" style="color:#22c55e;">${buenos}</div>
+            <div class="lbl">Estado bueno+</div>
+        </div></div>
+        <div class="col-4"><div class="stat-mini">
+            <div class="val" style="color:#ef4444;">${atencion}</div>
+            <div class="lbl">Requieren atencion</div>
+        </div></div>
+    </div>`;
+
+    // Matriz de colores
+    html += `<div class="res-card fade-in">
+        <div class="card-head head-teal">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+            Mapa de Estado por Parcela
+        </div>
+        <div class="card-body-inner">
+            <div class="parcel-matrix-grid" id="matrizGrid">
+                ${data.matriz_colores.map((p, i) => buildTile(p, i)).join("")}
+            </div>
+            <div class="matrix-legend">
+                ${Object.entries(ESTADO_COLOR).filter(([k]) => k !== "error").map(([estado, color]) => `
+                <div class="legend-item">
+                    <span class="legend-dot" style="background:${color};"></span>
+                    <span>${capitalizarEstado(estado)}</span>
+                </div>`).join("")}
+            </div>
+        </div>
+    </div>`;
+
+    rc.innerHTML = html;
+    rc.style.display = "block";
+
+    // Mostrar la primera parcela por defecto
+    seleccionarParcela(0);
+    rc.scrollIntoView({ behavior: "smooth" });
+}
+
+/**
+ * Construye el HTML de una celda de la matriz de parcelas.
+ * El fondo es el color segun estado de salud del suelo.
+ */
+function buildTile(p, idx) {
+    const color  = ESTADO_COLOR[p.estado] || "#6b7280";
+    const score  = p.score ? p.score.toFixed(0) : "—";
+    const tooltip = `${p.parcela} — ${capitalizarEstado(p.estado)} (${score}/100)`;
+    return `<div class="parcel-tile" id="tile-${idx}"
+             style="background: linear-gradient(145deg, ${color}, ${darken(color, 25)});"
+             data-tooltip="${tooltip}"
+             onclick="seleccionarParcela(${idx})">
+        <div class="tile-id">P${idx + 1}</div>
+        <div class="tile-score">${score}</div>
+        <div class="tile-label">${capitalizarEstado(p.estado)}</div>
+        <div class="tile-muestras">${resultadosGlobal[idx]?.num_muestras || 1} muestras</div>
+    </div>`;
+}
+
+/**
+ * Muestra el analisis completo de la parcela con indice idx.
+ * Resalta la celda activa en la matriz.
+ */
+function seleccionarParcela(idx) {
+    // Resaltar tile activo
+    document.querySelectorAll(".parcel-tile").forEach((t, i) => {
+        t.classList.toggle("active", i === idx);
+    });
+
+    const r  = resultadosGlobal[idx];
+    const dc = document.getElementById("detalleContainer");
+
+    const nombreParcela = r?.parcela || `Parcela ${idx + 1}`;
+    const cultivo = (r?.analisis_suelo?.cultivos_compatibles || [{}])[0]?.cultivo || "maiz";
+    // ID deterministico por indice (evita colisiones y coincide con el div generado)
+    const grafId = `graficaP${idx}`;
+
+    dc.innerHTML = `
+    <div class="parcel-detail-header fade-in">
+        <i class="bi bi-geo-fill fs-5"></i>
+        <div>
+            <strong>${nombreParcela}</strong>
+            <small class="d-block" style="opacity:0.7;">${r?.num_muestras || 1} muestra(s) promediadas</small>
+        </div>
+        <div class="ms-auto">${buildBadgeSalud(r?.analisis_suelo?.salud_general)}</div>
+    </div>
+    ${buildResultadoParcela(r, grafId)}`;
+
+    dc.style.display = "block";
+
+    // Cargar grafica de optimizacion (el div ya existe porque innerHTML fue asignado)
+    cargarGraficaEnDiv(grafId, cultivo, r?.datos_entrada || {}, r?.plan_fertilizacion);
+    dc.scrollIntoView({ behavior: "smooth" });
+}
+
+// ---------------------------------------------------------------------------
+// Seccion Prueba de Hipotesis (Degradacion tab) — parametro mas extremo del vector
+// ---------------------------------------------------------------------------
+
+/**
+ * Tabla t-Student de valores criticos para prueba unilateral (cola izquierda o derecha).
+ * Se usa cuando n < 30. Para gl > 30 se aproxima con z = 1.645 (alfa=0.05).
+ * gl = grados de libertad = n - 1
+ */
+const T_CRITICO = {
+    1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015,
+    6: 1.943, 7: 1.895, 8: 1.860, 9: 1.833, 10: 1.812,
+    11: 1.796, 12: 1.782, 13: 1.771, 14: 1.761, 15: 1.753,
+    16: 1.746, 17: 1.740, 18: 1.734, 19: 1.729, 20: 1.725,
+    25: 1.708, 29: 1.699
+};
+function tCritico(gl) {
+    if (gl >= 30) return 1.645; // z-test normal
+    return T_CRITICO[gl] || T_CRITICO[Math.min(gl, 29)] || 1.699;
+}
+
+/**
+ * Construye la seccion de Prueba de Hipotesis para la pestana Degradacion.
+ *
+ * Logica:
+ *  1. De tabla_analisis toma N, P, K y encuentra el que tiene mayor |balance| (ΔV).
+ *  2. Si hay muestras individuales (n >= 2), corre prueba t-Student (n<30) o Z (n>=30).
+ *  3. Muestra todos los elementos de la rubrica: Ho, Ha, alfa, n, estadistico, conclusion.
+ *  4. Agrega parrafo puente que conecta con la proyeccion que sigue abajo.
+ *
+ * @param {object} r       - Resultado completo de parcela del backend
+ * @param {object} plan    - plan_fertilizacion
+ * @param {string} cultivo - Nombre del cultivo recomendado
+ */
+function buildSeccionHipotesis(r, plan, cultivo) {
+    const tabla = plan?.analisis_deficit?.tabla_analisis || [];
+    if (!tabla.length) return "";
+
+    // --- 1. Encontrar el parametro NPK mas extremo (mayor |balance|) ---
+    const candidatos = tabla.filter(f => ["N","P","K"].includes(f.parametro));
+    if (!candidatos.length) return "";
+
+    const peor = candidatos.reduce((a, b) =>
+        Math.abs(parseFloat(b.balance)) > Math.abs(parseFloat(a.balance)) ? b : a
+    );
+
+    const param     = peor.parametro;
+    const balance   = parseFloat(peor.balance);
+    const demanda   = parseFloat(peor.demanda_cultivo);
+    const aporte    = parseFloat(peor.aporte_suelo);
+    const estado    = peor.estado || "Deficit";
+    const unidad    = peor.unidad || "kg/ha";
+    const esDeficit = balance > 0; // ΔV positivo = falta nutriente
+
+    const NOMBRE = { N: "Nitrógeno (N)", P: "Fósforo (P)", K: "Potasio (K)" };
+
+    // --- 2. Recopilar valores individuales de las muestras para ese parametro ---
+    const KEY_MAP = { N: "N_mgkg", P: "P_mgkg", K: "K_mgkg" };
+    const csvKey  = KEY_MAP[param];
+    const muestras = (r.muestras_individuales || []).map(m => {
+        // El valor en muestras_individuales esta en mg/kg; lo convertimos a kg/ha (x2)
+        const raw = parseFloat(
+            m.datos_entrada?.[csvKey] ??
+            m.plan_fertilizacion?.analisis_deficit?.tabla_analisis?.find(f => f.parametro === param)?.aporte_suelo ??
+            NaN
+        );
+        return isNaN(raw) ? NaN : raw;
+    }).filter(v => !isNaN(v));
+
+    const n = muestras.length;
+
+    // --- 3. Calcular estadisticos ---
+    let htmlPrueba = "";
+    let rechazaH0  = false; // se actualiza dentro del bloque else si n >= 2
+
+    if (n < 2) {
+        // Sin suficientes muestras — mostrar solo el enunciado descriptivo
+        htmlPrueba = `
+        <div class="alert alert-info d-flex gap-2 align-items-start mt-3">
+            <i class="bi bi-info-circle-fill" style="color:#0891b2; flex-shrink:0; margin-top:2px;"></i>
+            <div>
+                <strong>Prueba de Hipotesis no disponible:</strong>
+                Se necesitan al menos 2 muestras de la misma parcela para calcular
+                la variabilidad y ejecutar una prueba estadistica formal.<br>
+                <span style="font-size:0.82rem; color:#475569;">
+                El analisis vectorial reporta un <strong>${estado.toLowerCase()}</strong>
+                de <strong>${NOMBRE[param]}</strong> de manera determinista
+                (ΔV = ${balance > 0 ? "+" : ""}${balance.toFixed(1)} ${unidad}).
+                </span>
+            </div>
+        </div>`;
+    } else {
+        // Calcular media, desviacion estandar muestral, estadistico t
+        const mean = muestras.reduce((s, v) => s + v, 0) / n;
+        const variance = muestras.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / (n - 1);
+        const sd   = Math.sqrt(variance);
+        const se   = sd / Math.sqrt(n);  // error estandar
+
+        // mu_0 = valor objetivo (demanda del cultivo, ya en kg/ha)
+        const mu0 = demanda;
+
+        // Estadistico t = (x̄ - mu0) / (s/√n)
+        const t_calc = se > 0 ? (mean - mu0) / se : 0;
+
+        const gl          = n - 1;
+        const tipoPrueba  = n < 30 ? "t-Student" : "Z (normal)";
+        const t_crit      = tCritico(gl);
+        // Prueba unilateral: si deficit, H0: mu >= mu0 → rechazar si t_calc < -t_crit
+        //                    si exceso,  H0: mu <= mu0 → rechazar si t_calc >  t_crit
+        rechazaH0 = esDeficit ? (t_calc < -t_crit) : (t_calc > t_crit);
+
+        // Color y mensaje de conclusion
+        const [colorConcl, iconConcl, tituloConcl, textoConcl] = rechazaH0
+            ? ["#dc2626", "bi-x-circle-fill",
+               "Problema Confirmado",
+               `Las muestras de tierra confirman que el desequilibrio de <strong>${NOMBRE[param]}</strong> es real y constante en la parcela. Necesitas intervenir.`]
+            : ["#16a34a", "bi-check-circle-fill",
+               "Desequilibrio Leve",
+               `La falta o exceso de <strong>${NOMBRE[param]}</strong> no es grave en toda la parcela (puede variar por zonas). Aún así, te recomendamos seguir la receta de fertilizante.`];
+
+        htmlPrueba = `
+        <div class="mt-3 p-3 rounded" style="background:#f8fafc; border:1px solid #e2e8f0;">
+            <p style="font-size:0.9rem; margin-bottom: 1rem;">
+                <strong>Análisis Estadístico:</strong> Notamos que tu nivel de <strong>${NOMBRE[param]}</strong> está fuera de lo ideal. 
+                Hemos evaluado la consistencia de tus muestras para asegurar si es un problema constante en toda la parcela.
+            </p>
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:600; text-transform:uppercase;">Hipótesis Nula (H₀)</div>
+                    <div style="font-size:0.85rem; margin-top:3px;">${esDeficit ? 'El nivel es suficiente para el cultivo.' : 'El nivel no supera el límite óptimo.'}</div>
+                </div>
+                <div class="col-md-6">
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:600; text-transform:uppercase;">Hipótesis Alternativa (H₁)</div>
+                    <div style="font-size:0.85rem; margin-top:3px;">${esDeficit ? 'Existe un déficit real y persistente.' : 'Existe un exceso real y constante.'}</div>
+                </div>
+            </div>
+            <div class="row g-2 mb-3 text-center">
+                <div class="col-4">
+                    <div style="font-size:0.7rem; color:#64748b; font-weight:600; text-transform:uppercase;">Nº Muestras</div>
+                    <div style="font-size:1.1rem; font-weight:700; color:#1e293b;">${n}</div>
+                </div>
+                <div class="col-4">
+                    <div style="font-size:0.7rem; color:#64748b; font-weight:600; text-transform:uppercase;">Promedio</div>
+                    <div style="font-size:1.1rem; font-weight:700; color:#1e293b;">${mean.toFixed(2)}</div>
+                </div>
+                <div class="col-4">
+                    <div style="font-size:0.7rem; color:#64748b; font-weight:600; text-transform:uppercase;">Variabilidad</div>
+                    <div style="font-size:1.1rem; font-weight:700; color:#1e293b;">±${sd.toFixed(2)}</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 align-items-start p-3 rounded" style="background:${rechazaH0 ? "#fef2f2" : "#f0fdf4"}; border:2px solid ${colorConcl}30;">
+                <i class="bi ${iconConcl}" style="color:${colorConcl}; font-size:1.4rem; flex-shrink:0; margin-top:2px;"></i>
+                <div>
+                    <div style="font-weight:700; color:${colorConcl}; font-size:0.95rem;">${tituloConcl}</div>
+                    <div style="font-size:0.84rem; color:#374151; margin-top:4px;">${textoConcl}</div>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    // --- 4. Parrafo puente hacia la proyeccion ---
+    // Solo se muestra cuando NO se rechaza H0 (deficit no significativo).
+    // Si se rechaza H0, la accion es obvia (fertilizar) y no hace falta el puente.
+    const puenteTexto = (n >= 2 && !rechazaH0)
+        ? `<p class="text-muted small mt-3 mb-1" style="border-left:3px solid #cbd5e1; padding-left:10px;">
+              <i class="bi bi-arrow-down me-1"></i>Aunque el desequilibrio no es estadisticamente significativo en las muestras actuales,
+              la siguiente proyeccion muestra que <em>sin fertilizacion</em> el suelo igualmente se deteriora
+              con el tiempo, ya que el cultivo extrae nutrientes en cada ciclo.
+           </p>`
+        : "";
+
+    return `
+    <div class="res-card fade-in">
+        <div class="card-head" style="background:#7c3aed; color:#fff;">
+            <i class="bi bi-graph-up"></i>
+            Prueba de Hipótesis — ¿Es real el desequilibrio de ${NOMBRE[param]}?
+        </div>
+        <div class="card-body-inner">
+            ${htmlPrueba}
+            ${puenteTexto}
+        </div>
+    </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Constructor del resultado completo de una parcela (DRY: unico + multiple)
+// ---------------------------------------------------------------------------
+
+/**
+ * Construye el HTML completo del resultado de una parcela dividido en 3 Pestañas.
+ *   Pestaña 1: Resumen (Analisis de Suelo y Vectorial del Promedio)
+ *   Pestaña 2: Fertilizacion (Fertilizantes recomendados, Proyeccion y Grafica)
+ *   Pestaña 3: Muestras Individuales (Analisis por cada muestra que compone la parcela)
+ *
+ * @param {object} r      - Resultado de parcela del backend
+ * @param {string} grafId - ID unico (ej. graficaUnico, graficaP0)
+ */
+function buildResultadoParcela(r, grafId) {
+    if (!r) return "";
+    if (r.error) return `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${r.error}</div>`;
+
+    const analisis = r.analisis_suelo || {};
+    const plan     = r.plan_fertilizacion || {};
+    const cultivo  = (analisis.cultivos_compatibles || [{}])[0]?.cultivo || "desconocido";
+
+    // Pestaña 1: Resumen
+    const tabResumen = `
+        ${buildSeccionSuelo(analisis)}
+        ${buildSeccionVectorial(plan)}
+    `;
+
+    // Pestaña 2: Fertilizacion
+    const tabFertilizacion = `
+        ${buildSeccionFertilizantes(plan)}
+        <div class="res-card fade-in mt-4">
+            <div class="card-head head-teal">
+                <i class="bi bi-graph-up-arrow"></i>
+                Optimización de Fertilizante para ${formatearCultivo(cultivo)}
+            </div>
+            <div class="card-body-inner">
+                <div id="${grafId}" style="height:380px; width:100%;"></div>
+            </div>
+        </div>
+    `;
+
+    // Pestaña 3: Muestras Individuales
+    let tabMuestras = "";
+    if (r.muestras_individuales && r.muestras_individuales.length > 0) {
+        tabMuestras = r.muestras_individuales.map((m, idx) => `
+            <div class="mb-4 pb-3 border-bottom">
+                <h5 class="text-secondary"><i class="bi bi-droplet me-2"></i>Muestra ${idx + 1}</h5>
+                ${buildSeccionSuelo(m.analisis_suelo || {})}
+                ${buildSeccionVectorial(m.plan_fertilizacion || {})}
+            </div>
+        `).join("");
+    } else {
+        tabMuestras = `<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No hay muestras individuales registradas o es una muestra unica.</div>`;
+    }
+
+    // Pestaña 4: Degradacion
+    const tabDegradacion = `
+        ${buildSeccionHipotesis(r, plan, cultivo)}
+        ${buildSeccionProyeccion(plan, cultivo)}
+    `;
+
+    return `
+    <ul class="nav nav-tabs mt-4" id="tabs-${grafId}" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold text-dark" id="resumen-tab-${grafId}" data-bs-toggle="tab" data-bs-target="#resumen-${grafId}" type="button" role="tab" aria-selected="true">
+                <i class="bi bi-clipboard-data me-1"></i> Resumen
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold text-dark" id="fert-tab-${grafId}" data-bs-toggle="tab" data-bs-target="#fert-${grafId}" type="button" role="tab" aria-selected="false">
+                <i class="bi bi-moisture me-1"></i> Fertilización
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold text-dark" id="degradacion-tab-${grafId}" data-bs-toggle="tab" data-bs-target="#degradacion-${grafId}" type="button" role="tab" aria-selected="false">
+                <i class="bi bi-activity me-1"></i> Degradación
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold text-dark" id="muestras-tab-${grafId}" data-bs-toggle="tab" data-bs-target="#muestras-${grafId}" type="button" role="tab" aria-selected="false">
+                <i class="bi bi-list-columns-reverse me-1"></i> Muestras
+            </button>
+        </li>
+    </ul>
+    <div class="tab-content pt-3 pb-4" id="tabsContent-${grafId}">
+        <div class="tab-pane fade show active" id="resumen-${grafId}" role="tabpanel" aria-labelledby="resumen-tab-${grafId}">
+            ${tabResumen}
+        </div>
+        <div class="tab-pane fade" id="fert-${grafId}" role="tabpanel" aria-labelledby="fert-tab-${grafId}">
+            ${tabFertilizacion}
+        </div>
+        <div class="tab-pane fade" id="degradacion-${grafId}" role="tabpanel" aria-labelledby="degradacion-tab-${grafId}">
+            ${tabDegradacion}
+        </div>
+        <div class="tab-pane fade" id="muestras-${grafId}" role="tabpanel" aria-labelledby="muestras-tab-${grafId}">
+            ${tabMuestras}
+        </div>
+    </div>`;
+}
+
+
+/* --- Seccion 1: Analisis de Suelo --- */
+function buildSeccionSuelo(analisis) {
+    const salud    = analisis.salud_general || {};
+    const cultivos = analisis.cultivos_compatibles || [];
+    const top1     = formatearCultivo(cultivos[0]?.cultivo || "—");
+
+    const topList = cultivos.slice(0, 5).map(c =>
+        `<li><i class="bi bi-flower1 me-1" style="color:#16a34a;"></i><strong>${formatearCultivo(c.cultivo)}</strong>
+         <span class="text-muted ms-1" style="font-size:0.82rem;">${c.porcentaje?.toFixed(1)}%</span></li>`
+    ).join("");
+
+    return `
+    <div class="res-card fade-in">
+        <div class="card-head head-green">
+            <i class="bi bi-leaf-fill"></i> Análisis de Suelo
+        </div>
+        <div class="card-body-inner">
+            <div class="row g-3 align-items-start">
+                <div class="col-md-4">
+                    <div class="small text-muted fw-semibold mb-1 text-uppercase" style="font-size:0.72rem; letter-spacing:.5px;">Estado de Salud</div>
+                    ${buildBadgeSalud(salud)}
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted fw-semibold mb-1 text-uppercase" style="font-size:0.72rem; letter-spacing:.5px;">Cultivo Recomendado</div>
+                    <span class="fw-semibold" style="color:#15803d; font-size:1rem;">${top1}</span>
+                </div>
+                <div class="col-md-5">
+                    <div class="small text-muted fw-semibold mb-1 text-uppercase" style="font-size:0.72rem; letter-spacing:.5px;">Top Cultivos Compatibles</div>
+                    <ul class="top-crop-list">${topList}</ul>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+/**
+ * Construye el badge coloreado de salud del suelo.
+ * @param {object} salud - { estado, score }
+ */
+function buildBadgeSalud(salud) {
+    if (!salud) return "";
+    const color = ESTADO_COLOR[salud.estado?.toLowerCase()] || "#6b7280";
+    return `<div class="health-badge" style="background:${hexRgba(color,0.15)}; color:${color}; border:2px solid ${hexRgba(color,0.4)}; font-size:0.88rem;">
+        ${salud.estado?.toUpperCase() || "—"} (${salud.score?.toFixed(1) || 0}/100)
+    </div>`;
+}
+
+/* --- Seccion 2: Analisis Vectorial de Deficit — tabla unificada de 5 parametros --- */
+/**
+ * Construye UNA sola tabla con los 5 parametros (N, P, K, pH, MO).
+ * Cada fila muestra: parametro, demanda, aporte, balance (ΔV) y estado.
+ * El esquema de colores de fila es el mismo que el de badge de estado.
+ * Antes habia dos tablas separadas (3D + 5D); ahora es una sola (DRY).
+ */
+function buildSeccionVectorial(plan) {
+    const deficit = plan?.analisis_deficit;
+    if (!deficit) return "";
+
+    // tabla_analisis viene del backend con los 5 parametros ya calculados
+    const tabla = deficit.tabla_analisis || [];
+
+    // Fallback: si el backend no devuelve tabla_analisis (version legacy),
+    // construir manualmente con los vectores 3D para no romper compatibilidad
+    const filas = tabla.length > 0 ? tabla : [
+        { parametro: "N", demanda_cultivo: (deficit.v_demanda||[0])[0], aporte_suelo: (deficit.v_suelo||[0])[0], balance: (deficit.deficit_real||[0])[0], unidad: "kg/ha", estado: "Deficit" },
+        { parametro: "P", demanda_cultivo: (deficit.v_demanda||[0])[1], aporte_suelo: (deficit.v_suelo||[0])[1], balance: (deficit.deficit_real||[0])[1], unidad: "kg/ha", estado: "Deficit" },
+        { parametro: "K", demanda_cultivo: (deficit.v_demanda||[0])[2], aporte_suelo: (deficit.v_suelo||[0])[2], balance: (deficit.deficit_real||[0])[2], unidad: "kg/ha", estado: "Deficit" },
+    ];
+
+    // Nombre completo del parametro para legibilidad
+    const NOMBRE_PARAM = { N: "Nitrógeno", P: "Fósforo", K: "Potasio", pH: "pH del Suelo", MO: "Materia Orgánica" };
+
+    // Color de fondo de fila segun estado (sutil, no agresivo)
+    const ROW_BG = {
+        "Óptimo": "#f0fdf4", "Optimo": "#f0fdf4",
+        "Déficit": "#fefce8", "Deficit": "#fefce8",
+        "Exceso": "#eff6ff",
+        "Exceso Tóxico": "#fff1f2", "Exceso Toxico": "#fff1f2",
+        "Crítico": "#fef2f2", "Critico": "#fef2f2"
+    };
+
+    const rows = filas.map(f => {
+        // Invertimos el signo para que déficit se vea negativo y exceso positivo, es más intuitivo
+        const visualBalance = -parseFloat(f.balance);
+        const signo = visualBalance > 0 ? "+" : "";
+        const bg    = ROW_BG[f.estado] || "#fff";
+        const cls   = ESTADO_CSS[f.estado] || "st-deficit";
+        return `<tr style="background:${bg};">
+            <td><strong>${f.parametro}</strong><br><span style="font-size:0.73rem; color:#64748b;">${NOMBRE_PARAM[f.parametro] || ""}</span></td>
+            <td style="font-weight:600; color:#1e40af;">${f.demanda_cultivo} ${f.unidad}</td>
+            <td>${f.aporte_suelo} ${f.unidad}</td>
+            <td style="font-weight:700;">${signo}${visualBalance.toFixed(1)} ${f.unidad}</td>
+            <td><span class="${cls}">${f.estado}</span></td>
+        </tr>`;
+    }).join("");
+
+    // Alerta de exceso — solo si hay nutrientes sobre el limite toxico
+    const exceso = deficit.exceso || {};
+    const alertas = [
+        exceso.n > 0 ? `Nitrógeno: +${exceso.n.toFixed(1)} kg/ha (evitar N adicional)` : null,
+        exceso.p > 0 ? `Fósforo: +${exceso.p.toFixed(1)} kg/ha (evitar P adicional)` : null,
+        exceso.k > 0 ? `Potasio: +${exceso.k.toFixed(1)} kg/ha (evitar K adicional)` : null,
+    ].filter(Boolean);
+
+    const alertaHtml = alertas.length > 0 ? `
+    <div class="mt-3 p-3 rounded d-flex gap-2" style="background:#fffbeb; border:1px solid #fde68a;">
+        <i class="bi bi-exclamation-triangle-fill" style="color:#d97706; flex-shrink:0;"></i>
+        <div>
+            <strong style="color:#92400e;">Nutrientes en Exceso Detectados:</strong>
+            ${alertas.map(a => `<div style="color:#78350f; font-size:0.83rem;">&#8226; ${a}</div>`).join("")}
+        </div>
+    </div>` : "";
+
+    return `
+    <div class="res-card fade-in">
+        <div class="card-head head-yellow">
+            <i class="bi bi-table"></i> Análisis Vectorial de Déficit — ΔV = V_demanda &minus; V_suelo
+        </div>
+        <div class="card-body-inner">
+            <p class="text-muted small mb-3">Cada fila muestra el balance entre lo que el cultivo demanda y lo que aporta el suelo actualmente.</p>
+            <div style="overflow-x:auto;">
+                <table class="state-table">
+                    <thead>
+                        <tr style="background:#f8fafc;">
+                            <th>Parámetro</th>
+                            <th style="color:#1e40af;">Demanda Cultivo</th>
+                            <th>Aporte Suelo</th>
+                            <th>Balance (ΔV)</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+            ${alertaHtml}
+        </div>
+    </div>`;
+}
+
+/* --- Seccion 3: Fertilizantes recomendados --- */
+function buildSeccionFertilizantes(plan) {
+    const ferts = (plan?.fertilizantes || []).filter(f => f && f.nombre_comercial);
+
+    if (ferts.length === 0) {
+        const msg = plan?.mensaje || "Suelo equilibrado: no se requiere fertilización adicional en este ciclo.";
+        return `
+        <div class="res-card fade-in">
+            <div class="card-head head-info">
+                <i class="bi bi-check-circle-fill"></i> Fertilización Recomendada
+            </div>
+            <div class="card-body-inner">
+                <div class="d-flex gap-2 align-items-start p-3 rounded" style="background:#dcfce7; border:1px solid #bbf7d0;">
+                    <i class="bi bi-check-circle-fill" style="color:#16a34a; font-size:1.2rem; flex-shrink:0;"></i>
+                    <div>
+                        <strong style="color:#166534;">${msg}</strong>
+                        <div style="font-size:0.82rem; color:#14532d; margin-top:0.3rem;">
+                            Aun asi, consulta la sección de Proyección Temporal para anticipar
+                            cuándo será necesaria la primera intervención con fertilizante.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    const rows = ferts.map(f => {
+        const nut_color = NUT_COLOR[f.nutriente_objetivo] || "#6b7280";
+        const npk = `${f.composicion.n}-${f.composicion.p}-${f.composicion.k}`;
+        return `
+        <div class="fert-row">
+            <div style="flex:1;">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <strong>${f.nombre_comercial}</strong>
+                    <span class="fert-nut-badge" style="background:${hexRgba(nut_color,.15)}; color:${nut_color}; border:1px solid ${hexRgba(nut_color,.3)};">
+                        ${f.nutriente_objetivo?.toUpperCase()} | NPK ${npk}
+                    </span>
+                </div>
+                <div class="fert-dosis">${f.dosis_formateada || f.dosis_kg_ha + " kg/ha"}</div>
+                <div class="fert-costales">
+                    <i class="bi bi-bag-fill me-1" style="color:#94a3b8;"></i>
+                    ${f.numero_costales_50kg} costales de 50 kg
+                    &nbsp;&mdash;&nbsp;
+                    Costo: <strong>$${(f.costo_costales || f.precio_total || 0).toFixed(2)} MXN</strong>
+                </div>
+                <div class="mt-1" style="font-size:0.77rem; color:#94a3b8;">${f.funcion || ""}</div>
+            </div>
+        </div>`;
+    }).join("");
+
+    return `
+    <div class="res-card fade-in">
+        <div class="card-head head-blue">
+            <i class="bi bi-capsule-pill"></i> Fertilizantes Recomendados (Cálculo Vectorial)
+        </div>
+        <div class="card-body-inner">
+            ${rows}
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-3"
+                 style="border-top:1px solid #e2e8f0;">
+                <div>
+                    <div class="small text-muted">Inversión total estimada</div>
+                    <small class="text-muted" style="font-size:0.72rem;">Calculado en kg/ha sobre dosis recomendada</small>
+                </div>
+                <div style="font-size:1.4rem; font-weight:800; color:#16a34a;">
+                    $${(plan.costo_total_estimado || 0).toFixed(2)} MXN
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Seccion 4: Proyeccion temporal de fertilidad (modelo de agotamiento)
+// ---------------------------------------------------------------------------
+
+/**
+ * Proyecta el balance de N, P, K, pH y MO para los proximos N_TEMPORADAS ciclos.
+ *
+ * Modelo de agotamiento por temporada:
+ *   aporte_t = aporte_{t-1} - (demanda_cultivo * FACTOR_EXTRACCION)
+ *
+ * FACTOR_EXTRACCION (~0.65) = fraccion de nutrientes extraida de forma neta
+ * (la diferencia con 1.0 representa lo que vuelve al suelo via residuos/raices).
+ * pH y MO tienen degradacion autonoma independiente de la demanda del cultivo.
+ *
+ * Se muestra siempre: un suelo equilibrado hoy no garantiza estabilidad futura
+ * sin reposicion activa de nutrientes.
+ */
+function buildSeccionProyeccion(plan, cultivo) {
+    const deficit = plan?.analisis_deficit;
+    if (!deficit?.tabla_analisis?.length) return "";
+
+    // Constantes del modelo agronomico
+    const N_TEMPORADAS      = 5;     // Horizonte de proyeccion (ciclos de cultivo)
+    const FACTOR_EXTRACCION = 0.65;  // Fraccion de demanda extraida neta por temporada
+    const DELTA_PH_POR_TEMP = 0.08;  // Acidificacion progresiva bajo cultivo intensivo
+    const DELTA_MO_POR_TEMP = 0.12;  // Perdida de MO por mineralizacion organica
+
+    // Extraer valores actuales de la tabla_analisis (fuente de verdad del backend)
+    const tabla  = deficit.tabla_analisis;
+    const getRow = key => tabla.find(f => f.parametro === key) || {};
+    const rN = getRow("N"); const rP = getRow("P"); const rK = getRow("K");
+    const rPH = getRow("pH"); const rMO = getRow("MO");
+
+    // Valores actuales del suelo
+    let an = parseFloat(rN.aporte_suelo  || 0);
+    let ap = parseFloat(rP.aporte_suelo  || 0);
+    let ak = parseFloat(rK.aporte_suelo  || 0);
+    let aph = parseFloat(rPH.aporte_suelo || 7.0);
+    let amo = parseFloat(rMO.aporte_suelo || 2.0);
+
+    // Demanda del cultivo (constante por temporada)
+    const dn  = parseFloat(rN.demanda_cultivo  || 150);
+    const dp  = parseFloat(rP.demanda_cultivo  || 80);
+    const dk  = parseFloat(rK.demanda_cultivo  || 120);
+    const dph = parseFloat(rPH.demanda_cultivo || 6.5);
+    const dmo = parseFloat(rMO.demanda_cultivo || 3.0);
+
+    // Extraccion neta de NPK por temporada
+    const ext_n = dn * FACTOR_EXTRACCION;
+    const ext_p = dp * FACTOR_EXTRACCION;
+    const ext_k = dk * FACTOR_EXTRACCION;
+
+    // Umbrales para clasificacion de estado en la proyeccion (O(1) por parametro)
+    const UMBRALES = {
+        N:  { et: 200, e: 30, om:  10, oa: -10, c: -50  },
+        P:  { et: 100, e: 20, om:  10, oa: -10, c: -40  },
+        K:  { et: 300, e: 50, om:  20, oa: -20, c: -80  },
+        pH: { et: 1.5, e: 0.5,om:  0.3,oa: -0.3,c: -1.0 },
+        MO: { et: 3.0, e: 1.0, om: 0.5, oa:-0.5,c: -1.5 },
+    };
+
+    /**
+     * Clasifica el estado nutricional segun el balance actual.
+     * Retorna { label, cls } para badge HTML.
+     * Complejidad: O(1) — 5 comparaciones fijas.
+     */
+    function clasificar(visualBalance, param) {
+        const u   = UMBRALES[param] || UMBRALES.N;
+        if (visualBalance >= u.et) return { label: "Exceso Tóxico", cls: "st-exceso-toxico" };
+        if (visualBalance >= u.e)  return { label: "Exceso",        cls: "st-exceso" };
+        if (visualBalance >= u.oa && visualBalance <= u.om) return { label: "Óptimo", cls: "st-optimo" };
+        if (visualBalance <= u.c)  return { label: "Crítico",   cls: "st-critico" };
+        return { label: "Déficit", cls: "st-deficit" };
+    }
+
+    // Orden de severidad para calcular el estado general de la temporada
+    const SEVERIDAD = ["Crítico", "Exceso Tóxico", "Déficit", "Exceso", "Óptimo"];
+
+    // Construir proyecciones por temporada (incluyendo t=0 = situacion actual)
+    const temporadas = [];
+    const series = { t: [], n: [], p: [], k: [], ph: [], mo: [] };
+
+    // Temporada 0: estado actual sin degradacion adicional
+    const b0n  = an - dn;   const b0p  = ap - dp;   const b0k  = ak - dk;
+    const b0ph = aph - dph; const b0mo = amo - dmo;
+    series.t.push(0); series.n.push(+b0n.toFixed(1)); series.p.push(+b0p.toFixed(1));
+    series.k.push(+b0k.toFixed(1)); series.ph.push(+b0ph.toFixed(2)); series.mo.push(+b0mo.toFixed(2));
+
+    for (let t = 1; t <= N_TEMPORADAS; t++) {
+        // Aplicar extraccion/degradacion de esta temporada
+        an  = an  - ext_n;
+        ap  = ap  - ext_p;
+        ak  = ak  - ext_k;
+        aph = Math.max(4.0, aph - DELTA_PH_POR_TEMP);
+        amo = Math.max(0.5, amo - DELTA_MO_POR_TEMP);
+
+        const bn  = +(an - dn).toFixed(1);
+        const bp  = +(ap - dp).toFixed(1);
+        const bk  = +(ak - dk).toFixed(1);
+        const bph = +(aph - dph).toFixed(2);
+        const bmo = +(amo - dmo).toFixed(2);
+
+        series.t.push(t);
+        series.n.push(bn); series.p.push(bp); series.k.push(bk);
+        series.ph.push(bph); series.mo.push(bmo);
+
+        const stN  = clasificar(bn,  "N");
+        const stP  = clasificar(bp,  "P");
+        const stK  = clasificar(bk,  "K");
+        const stPH = clasificar(bph, "pH");
+        const stMO = clasificar(bmo, "MO");
+
+        // Estado general = el mas severo de los 5 parametros
+        const labels = [stN.label, stP.label, stK.label, stPH.label, stMO.label];
+        const peorLabel = labels.reduce((a, b) => SEVERIDAD.indexOf(a) < SEVERIDAD.indexOf(b) ? a : b);
+        const stGen = { label: peorLabel, cls: ESTADO_CSS[peorLabel] || "st-deficit" };
+
+        temporadas.push({ t, bn, bp, bk, bph, bmo, stN, stP, stK, stPH, stMO, stGen });
+    }
+
+    // ID unico para la grafica de proyeccion (evita colisiones al mostrar varias parcelas)
+    const grafProy = "grafProy_" + Math.random().toString(36).slice(2, 7);
+
+    // Renderizar grafica Plotly despues de que el DOM inserte el div
+    requestAnimationFrame(() => {
+        const div = document.getElementById(grafProy);
+        if (!div) return;
+        Plotly.newPlot(grafProy, [
+            { x: series.t, y: series.n,  name: "N Balance (kg/ha)", mode: "lines+markers",
+              line: { color: "#3b82f6", width: 2.5 }, marker: { size: 6 } },
+            { x: series.t, y: series.p,  name: "P Balance (kg/ha)", mode: "lines+markers",
+              line: { color: "#f59e0b", width: 2.5 }, marker: { size: 6 } },
+            { x: series.t, y: series.k,  name: "K Balance (kg/ha)", mode: "lines+markers",
+              line: { color: "#8b5cf6", width: 2.5 }, marker: { size: 6 } },
+            { x: series.t, y: series.ph, name: "pH Balance", mode: "lines+markers",
+              line: { color: "#10b981", width: 1.5, dash: "dot" }, marker: { size: 5 }, yaxis: "y2" },
+            { x: series.t, y: series.mo, name: "MO Balance (%)", mode: "lines+markers",
+              line: { color: "#ef4444", width: 1.5, dash: "dash" }, marker: { size: 5 }, yaxis: "y2" },
+            // Linea de referencia de equilibrio (balance = 0)
+            { x: [0, N_TEMPORADAS], y: [0, 0], mode: "lines", showlegend: false,
+              line: { color: "rgba(0,0,0,0.18)", width: 1.5, dash: "dashdot" } }
+        ], {
+            title: { text: `<b>Proyección de Agotamiento — ${N_TEMPORADAS} Temporadas — ${formatearCultivo(cultivo)}</b>`, font: { size: 12 } },
+            xaxis: {
+                title: "<b>Temporada (ciclo de cultivo)</b>",
+                tickmode: "array",
+                tickvals: series.t,
+                ticktext: series.t.map(v => v === 0 ? "Actual" : `T+${v}`)
+            },
+            yaxis: {
+                title: "<b>Balance NPK (kg/ha)</b>", zeroline: true,
+                zerolinecolor: "rgba(0,0,0,0.25)", zerolinewidth: 2,
+                titlefont: { color: "#3b82f6" }, tickfont: { color: "#3b82f6" }
+            },
+            yaxis2: {
+                title: "<b>pH / MO Balance</b>", side: "right", overlaying: "y",
+                zeroline: true, zerolinecolor: "rgba(0,0,0,0.15)",
+                titlefont: { color: "#10b981" }, tickfont: { color: "#10b981" }
+            },
+            hovermode: "x unified", plot_bgcolor: "#fafafa", paper_bgcolor: "#fff",
+            font: { family: "Inter, Arial, sans-serif", size: 10 },
+            margin: { l: 65, r: 75, t: 50, b: 55 },
+            legend: { orientation: "h", y: -0.3, font: { size: 9 } }
+        }, { responsive: true, displaylogo: false });
+    });
+
+    // Tabla de estados proyectados por temporada
+    const COL_PROY = { "Óptimo":"#f0fdf4", "Optimo":"#f0fdf4", "Déficit":"#fefce8", "Deficit":"#fefce8", "Exceso":"#eff6ff", "Exceso Tóxico":"#fff1f2", "Exceso Toxico":"#fff1f2", "Crítico":"#fef2f2", "Critico":"#fef2f2" };
+    const tablaRows = temporadas.map(f => `
+    <tr style="background:${COL_PROY[f.stGen.label] || '#fff'};">
+        <td><strong>T+${f.t}</strong></td>
+        <td><span class="${f.stN.cls}" style="font-size:0.72rem;">${f.stN.label}</span>
+            <br><small style="color:#64748b;">${f.bn > 0 ? "+" : ""}${f.bn} kg/ha</small></td>
+        <td><span class="${f.stP.cls}" style="font-size:0.72rem;">${f.stP.label}</span>
+            <br><small style="color:#64748b;">${f.bp > 0 ? "+" : ""}${f.bp} kg/ha</small></td>
+        <td><span class="${f.stK.cls}" style="font-size:0.72rem;">${f.stK.label}</span>
+            <br><small style="color:#64748b;">${f.bk > 0 ? "+" : ""}${f.bk} kg/ha</small></td>
+        <td><span class="${f.stPH.cls}" style="font-size:0.72rem;">${f.stPH.label}</span>
+            <br><small style="color:#64748b;">${f.bph > 0 ? "+" : ""}${f.bph}</small></td>
+        <td><span class="${f.stMO.cls}" style="font-size:0.72rem;">${f.stMO.label}</span>
+            <br><small style="color:#64748b;">${f.bmo > 0 ? "+" : ""}${f.bmo}%</small></td>
+        <td><span class="${f.stGen.cls}">${f.stGen.label}</span></td>
+    </tr>`).join("");
+
+    // Detectar la primera temporada con problemas (Déficit o Crítico en el estado general)
+    const primerProblema = temporadas.find(x => x.t > 0 && (x.stGen.label === "Déficit" || x.stGen.label === "Crítico" || x.stGen.label === "Deficit" || x.stGen.label === "Critico"));
+
+    const alertaTemporal = primerProblema ?
+        `<div class="d-flex gap-2 align-items-start p-3 rounded mt-3" style="background:#fef3c7; border:1px solid #fde68a;">
+            <i class="bi bi-clock-history" style="color:#d97706; font-size:1.1rem; flex-shrink:0;"></i>
+            <div>
+                <strong style="color:#92400e;">Intervención recomendada antes de T+${primerProblema.t}</strong>
+                <div style="font-size:0.82rem; color:#78350f; margin-top:0.2rem;">
+                    Sin reposición de nutrientes, el suelo mostrará déficit nutricional en la temporada ${primerProblema.t}.
+                    Aplicar el plan de fertilización preventivo antes de ese ciclo de cultivo.
+                </div>
+            </div>
+        </div>` :
+        `<div class="d-flex gap-2 align-items-start p-3 rounded mt-3" style="background:#dcfce7; border:1px solid #bbf7d0;">
+            <i class="bi bi-shield-check" style="color:#16a34a; font-size:1.1rem; flex-shrink:0;"></i>
+            <div>
+                <strong style="color:#166534;">Suelo estable en el horizonte proyectado (${N_TEMPORADAS} temporadas)</strong>
+                <div style="font-size:0.82rem; color:#14532d; margin-top:0.2rem;">
+                    No se detectan déficits críticos en los próximos ${N_TEMPORADAS} ciclos de ${formatearCultivo(cultivo)}.
+                    Se recomienda análisis de suelo cada 2 temporadas para confirmar la tendencia.
+                </div>
+            </div>
+        </div>`;
+
+    return `
+        <div class="res-card fade-in mt-4 border-primary" style="border-width: 2px;">
+            <div class="card-head bg-primary text-white">
+                <i class="bi bi-clock-history"></i>
+                Proyección de Fertilidad con Plan de Acción — ${N_TEMPORADAS} Temporadas Futuras
+            </div>
+            <div class="card-body-inner">
+                <div class="alert alert-info mb-4" style="font-size:0.9rem; border-left: 4px solid #0d6efd;">
+                    <strong><i class="bi bi-info-circle-fill me-1"></i> ¿Qué pasará con tu suelo si no haces nada?</strong><br>
+                    La gráfica muestra cómo tu cultivo <strong>${formatearCultivo(cultivo)}</strong> irá agotando los nutrientes año tras año si no fertilizas.
+                    Valores negativos significan que la tierra está sufriendo un déficit severo y necesita ayuda urgente.
+                    <br><br>
+                    <span class="badge bg-success">Solución:</span> Aplica la receta de fertilizante al inicio de cada ciclo para mantener tu suelo siempre en óptimas condiciones.
+                </div>
+                
+                <h6 class="text-center text-secondary fw-bold mb-3">Agotamiento de Nutrientes en los próximos años</h6>
+                <div id="${grafProy}" style="height:290px; width:100%;"></div>
+
+            <!-- Tabla de estados proyectados -->
+            <div style="overflow-x:auto; margin-top:1rem;">
+                <table class="state-table">
+                    <thead>
+                        <tr style="background:#f8fafc;">
+                            <th>Temporada</th>
+                            <th>N</th><th>P</th><th>K</th><th>pH</th><th>MO</th>
+                            <th>Estado General</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tablaRows}</tbody>
+                </table>
+            </div>
+            ${alertaTemporal}
+            <div class="d-flex gap-2 align-items-start p-3 rounded mt-3" style="background:#f8fafc; border:1px solid #e2e8f0;">
+                <i class="bi bi-info-circle" style="color:#64748b; font-size:1.1rem; flex-shrink:0;"></i>
+                <div>
+                    <strong style="color:#334155;">Parámetros del Modelo Matemático</strong>
+                    <div style="font-size:0.82rem; color:#475569; margin-top:0.2rem;">
+                        Factor de extracción neta: ${FACTOR_EXTRACCION} |
+                        Degradación pH: ${DELTA_PH_POR_TEMP} unid/temporada |
+                        Degradación MO: ${DELTA_MO_POR_TEMP}%/temporada.<br>
+                        Estimación basada en tasas de extracción agronómica estándar.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Grafica de optimizacion (Plotly, cargada por demanda)
+// ---------------------------------------------------------------------------
+
+/**
+ * Solicita los datos de optimizacion al backend y renderiza la grafica Plotly
+ * dentro del div con ID grafId.
+ *
+ * Se envuelve en requestAnimationFrame para garantizar que el div exista en el
+ * DOM antes de que Plotly intente renderizar (el innerHTML puede no estar
+ * pintado en el mismo frame en que se asigna).
+ *
+ * @param {string} grafId    - ID del div donde se renderizara la grafica
+ * @param {string} cultivo   - Nombre del cultivo recomendado
+ * @param {object} propSuelo - Propiedades del suelo para ajuste de parametros
+ * @param {object} plan      - Plan de fertilizacion para obtener costales recomendados
+ */
+function cargarGraficaEnDiv(grafId, cultivo, propSuelo, plan) {
+    // Diferir la carga al siguiente frame de pintura para que el div este disponible
+    requestAnimationFrame(() => {
+        const div = document.getElementById(grafId);
+        if (!div) { console.warn(`[Optimizacion] div #${grafId} no encontrado en el DOM`); return; }
+
+        // Calcular total de costales recomendados
+        const totalBags = plan?.fertilizantes?.reduce((sum, f) => sum + (parseFloat(f.numero_costales_50kg) || 0), 0) || 0;
+
+        fetch("/api/fertilizer/optimization-for-crop", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cultivo, propiedades_suelo: propSuelo, total_bags: totalBags })
+        })
+        .then(r => r.json())
+        .then(datos => {
+            if (!datos.exito) { div.innerHTML = `<p class="text-muted small p-3">Sin datos de optimización para ${cultivo}.</p>`; return; }
+            renderGraficaOptimizacion(grafId, datos);
+        })
+        .catch(e => { console.error("Error cargando gráfica optimización:", e); });
+    });
+}
+
+/**
+ * Renderiza la grafica de optimizacion en el div especificado.
+ * Eje X  : Dosis de fertilizante
+ * Eje Y1 : Rendimiento (Ton/ha) — verde
+ * Eje Y2 : Beneficio neto       — azul
+ * Curva  : Degradacion del suelo — rojo punteado
+ */
+function renderGraficaOptimizacion(grafId, datos) {
+    const u   = datos.u_values;
+    const ren = datos.rendimiento;
+    const deg = datos.degradacion;
+    const ben = datos.beneficio_neto;
+    const opt = datos.punto_optimo;
+
+    // Filtrar indices no negativos para limpieza visual
+    const ok    = u.map((v, i) => v >= 0 && ren[i] >= 0 && ben[i] >= 0);
+    const uf    = u.filter((_,i) => ok[i]);
+    const renf  = ren.filter((_,i) => ok[i]);
+    const degf  = deg.filter((_,i) => ok[i]);
+    const benf  = ben.filter((_,i) => ok[i]);
+
+    const traces = [
+        {
+            x: uf, y: renf, name: "Rendimiento Agrícola", type: "scatter", mode: "lines",
+            yaxis: "y", line: { color: "#16a34a", width: 2.5 },
+            fill: "tozeroy", fillcolor: "rgba(22,163,74,0.07)",
+            hovertemplate: "<b>Rendimiento</b><br>Dosis: %{x:.2f}<br>%{y:.3f} Ton/ha<extra></extra>"
+        },
+        {
+            x: uf, y: benf, name: "Beneficio Neto", type: "scatter", mode: "lines",
+            yaxis: "y2", line: { color: "#1d4ed8", width: 3 },
+            fill: "tozeroy", fillcolor: "rgba(29,78,216,0.08)",
+            hovertemplate: "<b>Beneficio Neto</b><br>Dosis: %{x:.2f}<br>%{y:.2f}<extra></extra>"
+        },
+        {
+            x: uf, y: degf, name: "Degradación del Suelo", type: "scatter", mode: "lines",
+            yaxis: "y", line: { color: "#dc2626", width: 2, dash: "dot" },
+            hovertemplate: "<b>Degradación</b><br>Dosis: %{x:.2f}<br>%{y:.3f}<extra></extra>"
+        },
+        {
+            x: [opt.dosis], y: [opt.beneficio_neto], name: "Punto Óptimo",
+            mode: "markers+text", type: "scatter", yaxis: "y2",
+            marker: { size: 13, color: "#f59e0b", symbol: "star", line: { color: "#000", width: 1.5 } },
+            text: [`Optimo: ${opt.dosis.toFixed(1)} costales`], textposition: "top center",
+            textfont: { size: 10, family: "Inter, Arial" },
+            hovertemplate: "<b>Punto Optimo</b><br>Dosis: %{x:.2f} costales<br>Beneficio: %{y:.2f}<extra></extra>"
+        }
+    ];
+
+    const layout = {
+        title: { text: `<b>Optimización para ${formatearCultivo(datos.parametros?.cultivo || "")}</b>`, font: { size: 13 } },
+        xaxis: { title: "<b>Dosis (Costales de 50kg de Mezcla)</b>", showgrid: true, gridcolor: "#e2e8f0", zeroline: true, zerolinecolor: "#9ca3af" },
+        yaxis: {
+            title: "<b>Rendimiento / Degradación</b>", side: "left",
+            showgrid: true, gridcolor: "#e2e8f0",
+            titlefont: { color: "#16a34a" }, tickfont: { color: "#16a34a" }
+        },
+        yaxis2: {
+            title: "<b>Beneficio Neto</b>", side: "right", overlaying: "y",
+            titlefont: { color: "#1d4ed8" }, tickfont: { color: "#1d4ed8" }
+        },
+        hovermode: "x unified", plot_bgcolor: "#fafafa", paper_bgcolor: "#fff",
+        font: { family: "Inter, Arial, sans-serif", size: 11 },
+        margin: { l: 70, r: 80, t: 60, b: 60 },
+        legend: { orientation: "h", y: -0.2, x: 0.5, xanchor: "center", bgcolor: "rgba(255,255,255,0.9)", bordercolor: "#ddd", borderwidth: 1 }
+    };
+
+    Plotly.newPlot(grafId, traces, layout, { responsive: true, displaylogo: false });
+}
+
+// ---------------------------------------------------------------------------
+// Utilidades de formato y color
+// ---------------------------------------------------------------------------
+
+/** Convierte hex a rgba. */
+function hexRgba(hex, alpha) {
+    if (!hex || !hex.startsWith("#")) return `rgba(100,100,100,${alpha})`;
+    const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i+2), 16));
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/** Oscurece un color hex en n unidades. */
+function darken(hex, n) {
+    if (!hex || !hex.startsWith("#")) return hex;
+    const [r, g, b] = [1,3,5].map(i => Math.max(0, parseInt(hex.slice(i,i+2), 16) - n));
+    return "#" + [r,g,b].map(v => v.toString(16).padStart(2,"0")).join("");
+}
+
+/** Capitaliza el estado (ej: "muy_pobre" -> "Muy pobre"). */
+function capitalizarEstado(s) {
+    if (!s) return "";
+    return s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " ");
+}
+
+/** Formatea nombres de cultivos (ej: "maiz_grano_blanco" -> "Maíz grano blanco"). */
+function formatearCultivo(c) {
+    if (!c || c === "—" || c === "desconocido") return c;
+    const palabras = c.replace(/_/g, " ").split(" ");
+    let nombre = palabras.join(" ");
+    // Reemplazos de acentuación comunes
+    nombre = nombre.replace(/\bmaiz\b/ig, "Maíz");
+    nombre = nombre.replace(/\blimon\b/ig, "Limón");
+    nombre = nombre.replace(/\barbol\b/ig, "Árbol");
+    nombre = nombre.replace(/\bplatano\b/ig, "Plátano");
+    nombre = nombre.replace(/\bagave\b/ig, "Agave");
+    nombre = nombre.replace(/\balgodon\b/ig, "Algodón");
+    nombre = nombre.replace(/\bmelon\b/ig, "Melón");
+    nombre = nombre.replace(/\bcafe\b/ig, "Café");
+    nombre = nombre.replace(/\bmani\b/ig, "Maní");
+    nombre = nombre.replace(/\bcana\b/ig, "Caña");
+    nombre = nombre.replace(/\bazucar\b/ig, "azúcar");
+    return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+}
+
+/** Construye la alerta de columnas completadas por defecto. */
+function buildAlertaColumnas(cols) {
+    if (!cols || cols.length === 0) return "";
+    return `<div class="alert alert-warning d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.83rem;">
+        <i class="bi bi-info-circle-fill"></i>
+        <span>Columnas con valor de referencia: <strong>${cols.join(", ")}</strong></span>
+    </div>`;
+}
+</script>
+
+
+    </main>
+
+    <footer class="bg-dark text-light text-center py-3 mt-5">
+        <div class="container-fluid">
+            <div class="mb-2 mt-2">
+                <img src="static/img/agroasis_letras.png" alt="Agroasis" style="height: 65px; object-fit: contain;">
+            </div>
+            <p>Clasificación de Fertilidad en Parcelas Agrícolas</p>
+            <p class="small">Universidad Nacional Rosario Castellanos - Ciencias de Datos para Negocios</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="static/js/charts.js"></script>
+    
+</body>
+</html>

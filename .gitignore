@@ -19,3 +19,6 @@ convocatoria/
 *.blg
 *.toc
 *.synctex.gz
+
+# Resultados de las pruebas de paridad
+pruebas/salida/
