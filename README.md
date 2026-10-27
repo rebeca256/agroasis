@@ -85,7 +85,8 @@ Las muestras se agrupan por parcela según el nombre (`Parcela_A_M1`, `Parcela_A
 ## Equipo
 
 - Aquino Soto Joshua David
-- Gervacio Peralta Carlos David
+- Jaimes Cruz Rebeca
+- Santiago Ithan Felipe
 - Romero Morales Ángel Jerath
 
 **Profesores:** Barragán Trinidad Melesio · Castillo Vieyra Ana Karen · Hernández Jiménez Sharon
