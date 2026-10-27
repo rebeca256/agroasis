@@ -86,8 +86,8 @@ Las muestras se agrupan por parcela según el nombre (`Parcela_A_M1`, `Parcela_A
 
 - Aquino Soto Joshua David
 - Jaimes Cruz Rebeca
-- Santiago Ithan Felipe
 - Romero Morales Ángel Jerath
+- Santiago Ithan Felipe
 
 **Profesores:** Barragán Trinidad Melesio · Castillo Vieyra Ana Karen · Hernández Jiménez Sharon
 **Tutoras:** Sierra Hernández María Guadalupe · Hernández Jiménez Sharon
