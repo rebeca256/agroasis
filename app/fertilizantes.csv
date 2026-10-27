@@ -1,0 +1,16 @@
+id_fertilizante,nombre_comercial,n,p,k,precio_mxn,peso_costal_kg,clasificacion_objetivo,funcion_algoritmica
+1,Urea Agrícola,46,0,0,1500.00,50,General,Compensación de Nitrógeno puro
+2,DAP,18,46,0,1900.00,50,General,Arranque radicular de alto Fósforo
+3,Cloruro de Potasio,0,0,60,1650.00,50,Tubérculos/Frutales,Corrección severa de Potasio para llenado
+4,YaraMila Complex,12,11,18,2300.00,50,Tubérculos/Hortalizas,Fórmula premezclada ideal para papas y zanahorias
+5,Nitrofoska Especial,12,12,17,2250.00,50,Cítricos/Frutales,Equilibrio para cuajado y resistencia de cáscara
+6,YaraVera Amidas,40,0,0,1850.00,50,Cereales/Pastos,Nitrógeno de liberación prolongada
+7,MAP,11,52,0,2050.00,50,General,Máxima concentración de Fósforo disponible
+8,Sulfato de Potasio,0,0,50,1700.00,50,Frutales/Hortalizas,Potasio sin cloro para frutas sensibles
+9,Muriato de Potasio,0,0,60,1600.00,50,Cereales/Tubérculos,Potasio económico de alta concentración
+10,Fosfato Diamonico,18,46,0,1950.00,50,General,Fósforo y nitrógeno balanceados
+11,Sulfato de Amonio,21,0,0,1400.00,50,Acidez/Pastos,Nitrógeno más acidez del suelo
+12,Nitrato de Calcio,13,0,0,2100.00,50,Hortalizas/Frutales,Nitrógeno con calcio para deficiencias
+13,NPK 20-20-20,20,20,20,2500.00,50,Hortalizas/Ornamentales,Fórmula equilibrada universal
+14,NPK 15-15-15,15,15,15,2200.00,50,General,Fórmula económica equilibrada
+15,NPK 12-24-12,12,24,12,2350.00,50,Frutales,Alto fósforo para floración

@@ -1,0 +1,21 @@
+# Entorno virtual y caché de Python
+venv/
+__pycache__/
+*.pyc
+
+# Carpetas que crea la app al arrancar
+app/uploads/
+app/data/
+
+# Archivos originales comprimidos y documentos internos
+originales/
+convocatoria/
+
+# Compilación de LaTeX
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.toc
+*.synctex.gz

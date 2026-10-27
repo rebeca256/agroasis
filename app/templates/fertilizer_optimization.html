@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Optimización de Fertilizante - Agroasis{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Panel de Control - Sliders -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-sliders me-2"></i> Parámetros de Optimización</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Slider para 'a' - Coeficiente de Rendimiento -->
+                    <div class="mb-4">
+                        <label for="slider_a" class="form-label">
+                            <strong>Coeficiente de Rendimiento (a)</strong>
+                            <small class="text-muted d-block">Controla el crecimiento del rendimiento</small>
+                        </label>
+                        <input 
+                            type="range" 
+                            id="slider_a" 
+                            class="form-range" 
+                            min="0.1" 
+                            max="5" 
+                            step="0.1" 
+                            value="2"
+                        >
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">0.1</small>
+                            <span id="valor_a" class="badge bg-info">2.0</span>
+                            <small class="text-muted">5.0</small>
+                        </div>
+                        <div class="mt-2 p-2 bg-light rounded">
+                            <small><strong>Fórmula:</strong> R(u) = a·ln(u+1) + b</small>
+                        </div>
+                    </div>
+
+                    <!-- Slider para 'b' - Intercepto -->
+                    <div class="mb-4">
+                        <label for="slider_b" class="form-label">
+                            <strong>Intercepto (b)</strong>
+                            <small class="text-muted d-block">Valor base del rendimiento</small>
+                        </label>
+                        <input 
+                            type="range" 
+                            id="slider_b" 
+                            class="form-range" 
+                            min="-10" 
+                            max="10" 
+                            step="0.5" 
+                            value="0"
+                        >
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">-10</small>
+                            <span id="valor_b" class="badge bg-info">0.0</span>
+                            <small class="text-muted">10</small>
+                        </div>
+                    </div>
+
+                    <!-- Slider para 'c' - Coeficiente de Degradación -->
+                    <div class="mb-4">
+                        <label for="slider_c" class="form-label">
+                            <strong>Coeficiente de Degradación (c)</strong>
+                            <small class="text-muted d-block">Controla daño del suelo (u²)</small>
+                        </label>
+                        <input 
+                            type="range" 
+                            id="slider_c" 
+                            class="form-range" 
+                            min="0.01" 
+                            max="1" 
+                            step="0.01" 
+                            value="0.1"
+                        >
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">0.01</small>
+                            <span id="valor_c" class="badge bg-danger">0.1</span>
+                            <small class="text-muted">1.0</small>
+                        </div>
+                        <div class="mt-2 p-2 bg-light rounded">
+                            <small><strong>Fórmula:</strong> Degradación = c·u²</small>
+                        </div>
+                    </div>
+
+                    <!-- Botón Reset -->
+                    <button id="btn_reset" class="btn btn-outline-secondary btn-sm w-100 mb-3">
+                        ↺ Restablecer Valores
+                    </button>
+
+                    <!-- Info de Punto Óptimo -->
+                    <div class="alert alert-info mt-4" id="info_optimo" style="display: none;">
+                        <h6>✓ Punto Óptimo Encontrado</h6>
+                        <div class="small mt-2">
+                    <p class="mb-1"><strong>Dosis óptima (u*):</strong> <span id="optimo_u" class="text-success">-</span></p>
+                            <p class="mb-1"><strong>Beneficio máximo:</strong> <span id="optimo_beneficio" class="text-success">-</span> MXN</p>
+                            <p class="mb-0"><strong>Rendimiento:</strong> <span id="optimo_rendimiento" class="text-success">-</span> Ton/ha</p>
+                        </div>
+                    </div>
+
+                    <!-- Botón para ver análisis -->
+                    <button id="btn_analisis" class="btn btn-primary btn-sm w-100 mt-3">
+                        <i class="bi bi-bar-chart-line-fill me-1"></i> Ver Análisis Detallado
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card de Leyenda -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">📋 Leyenda</h6>
+                </div>
+                <div class="card-body small">
+                    <div class="mb-2">
+                        <span style="color: #2ca02c; font-weight: bold;">&#9473;&#9473;&#9473;</span>
+                        Rendimiento Proyectado (Ton/ha) — Eje izquierdo
+                    </div>
+                    <div class="mb-2">
+                        <span style="color: #1f77b4; font-weight: bold;">&#9473;&#9473;&#9473;</span>
+                        Beneficio Neto (MXN) — Eje derecho
+                    </div>
+                    <div class="mb-2">
+                        <span style="color: #d62728; font-weight: bold;">&#9473; &#9473;</span>
+                        Degradación del Suelo
+                    </div>
+                    <div class="mb-2">
+                        <span style="color: #ff7f0e; font-weight: bold;">&#9733;</span>
+                        Punto Óptimo de Rentabilidad
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Gráfica -->
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2"></i> Optimización Multivariable: Rendimiento y Beneficio Neto</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Contenedor para Plotly -->
+                    <div id="grafica_principal" style="height: 600px; width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- Panel de Estadísticas -->
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="card shadow-sm bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-info-circle me-1"></i> Interpretación</h6>
+                            <ul class="small mb-0">
+                                <li><strong>Verde (Eje izq.):</strong> Rendimiento proyectado en Ton/ha según dosis</li>
+                                <li><strong>Azul (Eje der.):</strong> Beneficio neto en MXN tras descontar degradación</li>
+                                <li><strong>Rojo punteado:</strong> Costo de degradación del suelo (cuadrático)</li>
+                                <li><strong>Punto estrella:</strong> Dosis de máximo beneficio neto</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">💡 Recomendaciones</h6>
+                            <ul class="small mb-0" id="recomendaciones">
+                                <li>Ajusta los parámetros para ver cómo cambia la gráfica</li>
+                                <li>La curva azul muestra el verdadero beneficio económico</li>
+                                <li>Después del óptimo, la degradación es mayor que el beneficio</li>
+                                <li>Considera factores externos en tu decisión final</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Análisis Detallado -->
+<div class="modal fade" id="modalAnalisis" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">📊 Análisis Detallado</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Ecuaciones Utilizadas</h6>
+                <div class="p-3 bg-light rounded mb-3">
+                    <p><strong>1. Rendimiento:</strong> R(u) = a·ln(u+1) + b</p>
+                    <p><strong>2. Degradación:</strong> D(u) = c·u²</p>
+                    <p><strong>3. Beneficio Neto:</strong> F(u) = R(u) - D(u)</p>
+                    <p><strong>4. Primera Derivada:</strong> F'(u) = a/(u+1) - 2cu</p>
+                    <p class="mb-0"><strong>5. Punto Óptimo:</strong> Donde F'(u) = 0</p>
+                </div>
+
+                <h6>Valores Actuales de Parámetros</h6>
+                <table class="table table-sm table-striped">
+                    <tr>
+                        <td><strong>a (Coef. Rendimiento)</strong></td>
+                        <td><span id="analisis_a">-</span></td>
+                        <td class="text-muted small">Escala del crecimiento logarítmico</td>
+                    </tr>
+                    <tr>
+                        <td><strong>b (Intercepto)</strong></td>
+                        <td><span id="analisis_b">-</span></td>
+                        <td class="text-muted small">Rendimiento base sin fertilizante</td>
+                    </tr>
+                    <tr>
+                        <td><strong>c (Coef. Degradación)</strong></td>
+                        <td><span id="analisis_c">-</span></td>
+                        <td class="text-muted small">Intensidad del daño del suelo</td>
+                    </tr>
+                </table>
+
+                <h6 class="mt-4">Punto Óptimo de Operación</h6>
+                <div class="alert alert-success">
+                    <p class="mb-2"><strong>Dosis Óptima (u*):</strong> <span id="analisis_u_optimo">-</span> unidades</p>
+                    <p class="mb-2"><strong>Beneficio Máximo:</strong> $<span id="analisis_beneficio">-</span> MXN</p>
+                    <p class="mb-2"><strong>Rendimiento en óptimo:</strong> <span id="analisis_rendimiento">-</span> Ton/ha</p>
+                    <p class="mb-0"><strong>Degradación en óptimo:</strong> <span id="analisis_degradacion">-</span></p>
+                </div>
+
+                <h6 class="mt-4">Interpretación</h6>
+                <div class="p-3 bg-warning bg-opacity-10 rounded" id="interpretacion_analisis">
+                    <p class="mb-0">Después de calcular, se mostrará la interpretación...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="{{ url_for('static', filename='js/fertilizer_optimization.js') }}"></script>
+
+{% endblock %}

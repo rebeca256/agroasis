@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}Modo Manual - Agroasis{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">
+        <i class="bi bi-pencil-square"></i> Modo Manual - Sin Datos de Laboratorio
+    </h2>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Responda preguntas sobre su parcela</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Modo Inferencia:</strong> El sistema estimara propiedades basado en sus respuestas.
+                        Esto proporciona aproximaciones, no análisis de laboratorio definitivos.
+                    </div>
+
+                    <form id="formManual">
+                        <!-- Cultivos previos -->
+                        <div class="mb-4">
+                            <h6 class="mb-1">¿Qué cultivos ha cultivado anteriormente en esta parcela?</h6>
+                            <small class="text-muted d-block mb-3">Seleccione los cultivos que sembró <strong>mientras trabajaba ese suelo</strong></small>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="maiz" id="cultivo_maiz" name="cultivos_previos">
+                                <label class="form-check-label" for="cultivo_maiz">Maíz</label>
+                                <small class="d-block text-muted">Rico en N, exige fertilización intensa</small>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="frijol" id="cultivo_frijol" name="cultivos_previos">
+                                <label class="form-check-label" for="cultivo_frijol">Frijol</label>
+                                <small class="d-block text-muted">Fija nitrógeno, requiere menos N</small>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="trigo" id="cultivo_trigo" name="cultivos_previos">
+                                <label class="form-check-label" for="cultivo_trigo">Trigo</label>
+                                <small class="d-block text-muted">Moderado en nutrientes</small>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="papa" id="cultivo_papa" name="cultivos_previos">
+                                <label class="form-check-label" for="cultivo_papa">Papa</label>
+                                <small class="d-block text-muted">Exige mucho K y materia orgánica</small>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="chile" id="cultivo_chile" name="cultivos_previos">
+                                <label class="form-check-label" for="cultivo_chile">Chile/Pimiento</label>
+                                <small class="d-block text-muted">Moderado N y P, buen K</small>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Tipo de suelo -->
+                        <div class="mb-3">
+                            <h6 class="mb-3">¿Cómo describiría el tipo de suelo de su parcela?</h6>
+                            <select class="form-select form-select-lg" id="tipo_suelo" name="tipo_suelo" required>
+                                <option value="">-- Seleccionar --</option>
+                                {% for texture in soil_textures %}
+                                    <option value="{{ texture }}">{{ texture.replace('_', ' ').title() }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted d-block mt-2">
+                                <strong>Arenoso:</strong> Drena rápido, baja retención de nutrientes
+                                <br><strong>Franco:</strong> Balance ideal, buen drenaje y retención
+                                <br><strong>Arcilloso:</strong> Retiene mucho agua y nutrientes, drena lento
+                            </small>
+                        </div>
+
+                        <hr>
+
+                        <!-- Caracteristicas adicionales -->
+                        <h6 class="mb-1">Características de su parcela</h6>
+                        <small class="text-muted d-block mb-3">Piense en las condiciones <strong>mientras plantaba ese cultivo</strong></small>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="ph_select" class="form-label">¿El suelo es más ácido o alcalino?</label>
+                                <select class="form-select" id="ph_select" name="ph_select" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="4.5">Muy ácido (pH 4-5)</option>
+                                    <option value="5.5">Ácido (pH 5-6)</option>
+                                    <option value="6.5">Neutral (pH 6-7)</option>
+                                    <option value="7.5">Ligeramente alcalino (pH 7-8)</option>
+                                    <option value="8.5">Alcalino (pH 8-9)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="materia_organica" class="form-label">Contenido de Materia Orgánica</label>
+                                <select class="form-select" id="materia_organica" name="materia_organica" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="1.5">Baja (menos de 2%)</option>
+                                    <option value="2.5">Media (2 a 3%)</option>
+                                    <option value="3.5">Alta (3 a 5%)</option>
+                                    <option value="4.5">Muy Alta (más de 5%)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="precipitacion_mm" class="form-label">Lluvia anual aproximada</label>
+                                <select class="form-select" id="precipitacion_mm" name="precipitacion_mm" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="200">Muy seca — menos de 300 mm (Sonora, Baja California)</option>
+                                    <option value="450">Seca — 300 a 600 mm (Zacatecas, Chihuahua)</option>
+                                    <option value="700">Moderada — 600 a 900 mm (Jalisco, Guanajuato, Edo. México)</option>
+                                    <option value="1000">Húmeda — 900 a 1200 mm (Veracruz, Puebla)</option>
+                                    <option value="1400">Muy húmeda — más de 1200 mm (Chiapas, Tabasco)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="temp_media_c" class="form-label">Temperatura media anual</label>
+                                <select class="form-select" id="temp_media_c" name="temp_media_c" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="10">Fría — menos de 12 °C (sierra alta, más de 2800 msnm)</option>
+                                    <option value="15">Templada fría — 12 a 18 °C (Tlaxcala, Hidalgo, Edo. México)</option>
+                                    <option value="20">Templada — 18 a 22 °C (Jalisco, Guanajuato, Michoacán)</option>
+                                    <option value="25">Cálida — 22 a 28 °C (Veracruz, Sinaloa, Tamaulipas)</option>
+                                    <option value="30">Muy cálida — más de 28 °C (Yucatán, Tabasco, Colima)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="altitud_msnm" class="form-label">Altitud aproximada de su parcela</label>
+                            <select class="form-select" id="altitud_msnm" name="altitud_msnm" required>
+                                <option value="">-- Seleccionar --</option>
+                                <option value="100">Costera o plana — menos de 300 msnm (costa del Golfo, Pacifico)</option>
+                                <option value="600">Baja — 300 a 900 msnm (pie de sierra, Veracruz bajo)</option>
+                                <option value="1200">Media — 900 a 1500 msnm (Jalisco, Guanajuato, Puebla)</option>
+                                <option value="1800">Alta — 1500 a 2200 msnm (Edo. México, Hidalgo, Tlaxcala)</option>
+                                <option value="2600">Muy alta — más de 2200 msnm (sierra, zonas frías)</option>
+                            </select>
+                            <small class="text-muted mt-1 d-block">El Estado de México se ubica típicamente entre 1500 y 2800 msnm — seleccione "Alta"</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning btn-lg w-100">
+                            <i class="bi bi-play-fill"></i> Generar Análisis
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-exclamation-triangle"></i> Importante
+                    </h5>
+                    <p class="small">
+                        Este modo utiliza <strong>inferencia</strong> basada en sus respuestas.
+                        Los resultados son <strong>aproximaciones</strong>, no análisis precisos.
+                    </p>
+                    <hr>
+                    <p class="small">
+                        <strong>Se recomienda:</strong> Realizar análisis de laboratorio para
+                        obtener resultados definitivos y recomendaciones precisas.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card bg-info bg-opacity-10 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-lightbulb"></i> Consejo
+                    </h5>
+                    <p class="small">
+                        Si tiene datos de laboratorio, use el
+                        <a href="/simple" class="link-primary">Modo Simple</a> o
+                        <a href="/avanzado" class="link-primary">Modo Avanzado</a>
+                        para análisis más precisos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="resultados" style="display: none;"></div>
+</div>
+
+<script>
+document.getElementById('formManual').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const cultivos = Array.from(document.querySelectorAll('input[name="cultivos_previos"]:checked'))
+        .map(el => el.value);
+
+    if (cultivos.length === 0) {
+        alert('Por favor seleccione al menos un cultivo previo');
+        return;
+    }
+
+    const datos = {
+        cultivos_previos: cultivos,
+        tipo_suelo: document.getElementById('tipo_suelo').value,
+        ph: document.getElementById('ph_select').value,
+        materia_organica: document.getElementById('materia_organica').value,
+        precipitacion_mm: document.getElementById('precipitacion_mm').value,
+        temp_media_c: document.getElementById('temp_media_c').value,
+        altitud_msnm: document.getElementById('altitud_msnm').value,
+        ce_ds_m: 0.8
+    };
+
+    try {
+        const response = await fetch('/api/manual/inferir', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(datos)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            alert('Error: ' + error.error);
+            return;
+        }
+
+        const resultado = await response.json();
+        mostrarResultadosManual(resultado);
+    } catch(error) {
+        alert('Error al procesar: ' + error.message);
+    }
+});
+
+function mostrarResultadosManual(resultado) {
+    const div = document.getElementById('resultados');
+
+    let html = `<div class="row mt-5">
+        <div class="col-lg-12">
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-info-circle"></i>
+                <strong>Nota Importante:</strong> ${resultado.advertencia}
+            </div>
+        </div>
+    </div>`;
+
+    // Propiedades inferidas
+    html += `<div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Propiedades Inferidas</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr><td><strong>N</strong></td><td>${resultado.propiedades_inferidas.N_mgkg?.toFixed(1) || 'N/A'} mg/kg</td></tr>
+                        <tr><td><strong>P</strong></td><td>${resultado.propiedades_inferidas.P_mgkg?.toFixed(1) || 'N/A'} mg/kg</td></tr>
+                        <tr><td><strong>K</strong></td><td>${resultado.propiedades_inferidas.K_mgkg?.toFixed(1) || 'N/A'} mg/kg</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Analisis de Suelo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Score de Salud:</strong> ${resultado.analisis_suelo.salud_general.score.toFixed(1)}/100
+                        <br><strong>Estado:</strong> ${resultado.analisis_suelo.salud_general.estado.toUpperCase()}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    // Cultivos recomendados
+    html += `<div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Cultivos Recomendados</h5>
+                </div>
+                <div class="card-body"><ul>`;
+
+    function formatearCultivoStr(c) {
+        if (!c) return "";
+        let n = c.replace(/_/g, " ");
+        n = n.replace(/\bmaiz\b/ig, "Maíz").replace(/\blimon\b/ig, "Limón").replace(/\barbol\b/ig, "Árbol").replace(/\bplatano\b/ig, "Plátano").replace(/\bagave\b/ig, "Agave").replace(/\balgodon\b/ig, "Algodón").replace(/\bmelon\b/ig, "Melón").replace(/\bcafe\b/ig, "Café").replace(/\bmani\b/ig, "Maní");
+        n = n.replace(/\bcana\b/ig, "Caña").replace(/\bazucar\b/ig, "azúcar");
+        return n.charAt(0).toUpperCase() + n.slice(1);
+    }
+
+    const cultivosCompatibles = resultado.analisis_suelo.cultivos_compatibles || [];
+    if (cultivosCompatibles.length === 0) {
+        html += `<div class="alert alert-warning mb-0"><i class="bi bi-exclamation-circle-fill"></i> El sistema no encontro ningun cultivo debido a lo siguiente: Los datos ingresados y el suelo seleccionado generan valores muy extremos que no son compatibles con la base de datos de cultivos recomendados.</div>`;
+    } else {
+        cultivosCompatibles.slice(0, 5).forEach(c => {
+            html += `<li><strong>${formatearCultivoStr(c.cultivo)}</strong> &mdash; Compatibilidad: ${c.porcentaje.toFixed(1)}%</li>`;
+        });
+    }
+
+    html += `</ul></div></div></div></div>`;
+
+    // Plan de fertilizacion — solo fertilizantes, sin cultivo ni costo
+    if (resultado.plan_fertilizacion) {
+        const fertilizantes = Object.values(resultado.plan_fertilizacion.plan_fertilizacion || {});
+        if (fertilizantes.length > 0) {
+            html += `<div class="row">
+                <div class="col-lg-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Fertilizantes Recomendados</h5>
+                        </div>
+                        <div class="card-body"><ul>`;
+
+            fertilizantes.forEach(fert => {
+                const costales = (fert.dosis_kg_ha / 50).toFixed(1);
+                html += `<li>
+                    <strong>${fert.comercial}</strong>
+                    &mdash; ${fert.dosis_kg_ha.toFixed(1)} kg/ha
+                    <span class="text-muted">(${costales} costales de 50 kg)</span>
+                </li>`;
+            });
+
+            html += `</ul></div></div></div></div>`;
+        }
+    }
+
+    div.innerHTML = html;
+    div.style.display = 'block';
+    div.scrollIntoView({behavior: 'smooth'});
+}
+</script>
+{% endblock %}
