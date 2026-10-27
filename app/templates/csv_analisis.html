@@ -1443,7 +1443,10 @@ function renderGraficaOptimizacion(grafId, datos) {
         layout.margin = { l: 45, r: 45, t: 50, b: 60 };
         layout.legend.y = -0.35;
     }
-    Plotly.newPlot(grafId, traces, layout, { responsive: true, displaylogo: false });
+    Plotly.newPlot(grafId, traces, layout, {
+        responsive: true, displaylogo: false,
+        displayModeBar: window.innerWidth >= 576  // en celular tapa el título
+    });
 }
 
 // Las gráficas que se dibujan en una pestaña oculta toman un ancho por
