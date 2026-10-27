@@ -66,7 +66,7 @@ Abrir en el navegador: **http://127.0.0.1:5000**
 
 ### Probarla rápido
 
-- **Modo CSV → "Demo"**: analiza `Analisis_VariasParcelas_VariasMUestra.csv` (varias parcelas con varias muestras cada una).
+- **Modo CSV → botón "CSV de ejemplo"**: analiza `Analisis_VariasParcelas_VariasMUestra.csv` (varias parcelas con varias muestras cada una).
 - **Subir un CSV propio** con columnas como las del ejemplo:
 
 ```csv
